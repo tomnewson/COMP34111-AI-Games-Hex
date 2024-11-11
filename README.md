@@ -2,6 +2,7 @@
 
 [**Important**] **Submission checklist and General information can be found in [Hex game doc.pdf](./Hex%20game%20doc.pdf)**
 
+
 We will be running each within this specific Dockerfile image and with this specific Docker environment. So make sure
 your agent will work within this container environment and under the constrain.
 
@@ -44,3 +45,9 @@ To run the test suite, you can use:
 ```bash
 python3 -m unittest discover
 ```
+
+### Misc
+
+Scan the following QR code to open this repo on your device: 
+
+![QR Code](qrcode_github.com.png "QR Code")
