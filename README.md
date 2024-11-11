@@ -1,5 +1,7 @@
 # COMP34120 AI and Games Coursework
 
+[**Important**] **Submission checklist and General information can be found in [Hex game doc.pdf](./Hex%20game%20doc.pdf)**
+
 We will be running each within this specific Dockerfile image and with this specific Docker environment. So make sure
 your agent will work within this container environment and under the constrain.
 
