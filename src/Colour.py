@@ -12,9 +12,9 @@ class Colour(Enum):
         """Returns the name of the colour as an uppercase character."""
 
         if colour == Colour.RED:
-            return "R"
+            return "\033[91m" + "R" + "\033[0m"
         elif colour == Colour.BLUE:
-            return "B"
+            return "\033[94m"+"B"+"\033[0m"
         else:
             return "0"
 
