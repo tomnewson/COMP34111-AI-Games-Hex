@@ -41,9 +41,12 @@ class MyAgent(AgentBase):
             Move: The agent's move
         """
 
-        # if turn == 2 and choice([0, 1]) == 1:
-        if turn == 2:
+        if opp_move and opp_move != Move(-1, -1):
+            self._choices.remove((opp_move.x, opp_move.y))
+
+        if turn == 2 and choice([0, 1]) == 1:
             return Move(-1, -1)
         else:
             x, y = choice(self._choices)
+            self._choices.remove((x, y))
             return Move(x, y)
