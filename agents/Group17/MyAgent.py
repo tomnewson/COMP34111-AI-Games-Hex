@@ -79,7 +79,7 @@ class MyAgent(AgentBase):
         """Return child with best UCT value"""
         return node
 
-    def mcts(self, board: Board, choices: list[Move], time_limit: int, start_time: float):
+    def mcts(self, board: Board, start_time: float):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
 
