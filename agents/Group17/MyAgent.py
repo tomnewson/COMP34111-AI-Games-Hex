@@ -1,5 +1,6 @@
 from random import choice
 import time
+import math
 
 from src.AgentBase import AgentBase
 from src.Board import Board
@@ -11,15 +12,25 @@ class Node:
     board: Board
     parent: None
     children: None
+    total_score: int
+    visits: int
 
-    def __init__(self, board: Board, parent = None):
+    def __init__(self, board: Board, parent = None, total_score = 0, visits = 0):
         self.board = board
         self.parent = parent
         self.children = []
+        self.total_score = total_score
+        self.visits = visits
 
     def add_child(self, child):
         """Expand node"""
         self.children.append(child)
+
+    def UCT(self, total_score, visits, parent_visits, risk):
+        average_value = total_score / visits
+        exploration = risk * (math.sqrt(math.log(parent_visits) / visits))
+
+        return average_value + exploration
 
 
 class MyAgent(AgentBase):

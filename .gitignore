@@ -1,5 +1,7 @@
 # Group 17 additions
 .bash_history
+.dotnet/
+.vscode-server/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
