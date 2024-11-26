@@ -26,11 +26,15 @@ class Node:
         """Expand node"""
         self.children.append(child)
 
+    # Call UCT for each child node in a function to evaluate
+    # which one is higher
     def UCT(self, total_score, visits, parent_visits, risk):
         average_value = total_score / visits
         exploration = risk * (math.sqrt(math.log(parent_visits) / visits))
 
         return average_value + exploration
+    
+    # TODO: Add UCT select function
 
 
 class MyAgent(AgentBase):
