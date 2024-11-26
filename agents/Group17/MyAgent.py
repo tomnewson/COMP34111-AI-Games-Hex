@@ -78,11 +78,13 @@ class MyAgent(AgentBase):
         """Return child with best UCT value"""
         pass
 
-    def mcts(self, board: Board, choices: list[Move], time_limit: int):
+    def mcts(self, board: Board, choices: list[Move], time_limit: int, start_time: float):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
 
         root = Node(board)
+
+        time_elapsed = time.time() - start_time
 
         while True:
             if time_elapsed >= self._time_limit:
@@ -132,5 +134,6 @@ class MyAgent(AgentBase):
 
         x, y = choice(self._choices)
         move = Move(x, y)
+
         self._choices.remove((move.x, move.y))
         return move
