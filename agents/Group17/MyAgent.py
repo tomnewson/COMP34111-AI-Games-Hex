@@ -18,6 +18,7 @@ class Node:
         self.children = []
 
     def add_child(self, child):
+        """Expand node"""
         self.children.append(child)
 
 
@@ -46,15 +47,15 @@ class MyAgent(AgentBase):
         Call best_child() with exploration constant reflecting the balance between exploration and exploitation
         Return selection
         """
-        pass
+        return node
 
     def is_terminal(self, node: Node):
         """Return True if the node is a win/loss, False otherwise"""
-        pass
+        return True
 
     def get_result(self, node: Node):
         """Return 1 for win, -1 for loss"""
-        pass
+        return 1
 
     def expand_node(self, node: Node):
         """MCTS Expansion phase
@@ -62,22 +63,21 @@ class MyAgent(AgentBase):
         Add to tree as a child
         Return child
         """
-        pass
+        return node
 
     def playout(self, node: Node):
         """MCTS Playout phase
         Apply policy until move is terminal
         Return result
         """
-        pass
+        return self.get_result(node)
 
     def backpropagate(self, node: Node, result: int):
         """MCTS Backpropagation phase"""
-        pass
 
     def best_child(self, node: Node, exploration_constant: float):
         """Return child with best UCT value"""
-        pass
+        return node
 
     def mcts(self, board: Board, choices: list[Move], time_limit: int, start_time: float):
         """Monte Carlo Tree Search
@@ -85,26 +85,30 @@ class MyAgent(AgentBase):
 
         root = Node(board)
 
-        time_elapsed = time.time() - start_time
-
         while True:
+            time_elapsed = time.time() - start_time
             if time_elapsed >= self._time_limit:
                 break
 
             # Selection
-            leaf = select_node(root)
-            if is_terminal(leaf):
-                result = get_result(leaf)
+            leaf = self.select_node(root)
+            if self.is_terminal(leaf):
+                result = self.get_result(leaf)
             else:
                 # Expansion
-                child = expand_node(leaf)
+                child = self.expand_node(leaf)
                 # Playout
-                result = playout(child)
+                result = self.playout(child)
             # Backpropagation
-            backpropagate(child, result)
+            self.backpropagate(child, result)
 
         # Return best child when time's up (maximise exploitation)
-        return best_child(root, exploration_constant=0)
+        return self.best_child(root, exploration_constant=0)
+
+    def _pick_random_move(self, choices):
+        """Pick a random move from the list of choices"""
+        x, y = choice(choices)
+        return Move(x, y)
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
         """The game engine will call this method to request a move from the agent.
@@ -122,8 +126,6 @@ class MyAgent(AgentBase):
             Move: The agent's move
         """
 
-        start_time = time.time()
-
         if opp_move and opp_move != Move(-1, -1):
             self._choices.remove((opp_move.x, opp_move.y))
 
@@ -131,10 +133,8 @@ class MyAgent(AgentBase):
         if turn == 2 and choice([0, 1]) == 1:
             return Move(-1, -1)
 
-        # move = self.mcts()
-
-        x, y = choice(self._choices)
-        move = Move(x, y)
+        # move = self.mcts(board, self._choices, self._time_limit, time.time())
+        move = self._pick_random_move(self._choices)
 
         self._choices.remove((move.x, move.y))
         return move
