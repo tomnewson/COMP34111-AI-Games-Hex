@@ -1,4 +1,5 @@
 from random import choice
+import time
 
 from src.AgentBase import AgentBase
 from src.Board import Board
@@ -8,10 +9,10 @@ from src.Move import Move
 class Node:
     """Node class for MCTS"""
     board: Board
-    parent: Node | None
-    children: list[Node]
+    parent: None
+    children: None
 
-    def __init__(self, board: Board, parent: Node|None = None):
+    def __init__(self, board: Board, parent = None):
         self.board = board
         self.parent = parent
         self.children = []
