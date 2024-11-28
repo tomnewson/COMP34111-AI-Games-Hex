@@ -60,6 +60,7 @@ class MyAgent(AgentBase):
     def select_node(self, node: Node):
         """MCTS Selection phase
         Call best_child() with exploration constant reflecting the balance between exploration and exploitation
+        Repeat until leaf node is reached
         Return selection
         """
         return node
