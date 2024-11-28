@@ -143,7 +143,7 @@ class MyAgent(AgentBase):
             self.playout(leaf)
 
         # Return best child when time's up (maximise exploitation)
-        # return root.best_child(self.EXPLORATION_CONSTANT)
+        # return root.best_child(0)
         return self._pick_random_move(self._choices) # placeholder return until mcts is implemented
 
     def _pick_random_move(self, choices):
