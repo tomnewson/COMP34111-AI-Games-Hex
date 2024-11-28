@@ -35,6 +35,8 @@ class Node:
         return average_value + exploration
 
     # TODO: Add UCT select function
+    def best_child(self, risk = 2):
+        pass
 
 
 class MyAgent(AgentBase):
@@ -63,7 +65,10 @@ class MyAgent(AgentBase):
         Repeat until leaf node is reached
         Return selection
         """
-        return node
+        while True:
+            if not node.children:
+                return node # return leaf node
+            node = node.best_child()
 
     def is_terminal(self, node: Node):
         """Return True if the node is a win/loss, False otherwise"""
