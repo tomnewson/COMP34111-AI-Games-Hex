@@ -57,6 +57,10 @@ class Node:
                 best_child = (child, uct)
         return best_child[0]
 
+    def is_terminal(self):
+        """Return True if the node is a win/loss, False otherwise"""
+        return self.board.has_ended(Colour.RED) or self.board.has_ended(Colour.BLUE)
+
 
 class MyAgent(AgentBase):
     """This class describes the default Hex agent. It will randomly send a
@@ -90,10 +94,6 @@ class MyAgent(AgentBase):
                 return node # return leaf node
             node = node.best_child(self.EXPLORATION_CONSTANT)
 
-    def is_terminal(self, node: Node):
-        """Return True if the node is a win/loss, False otherwise"""
-        return node.board.has_ended(Colour.RED) or node.board.has_ended(Colour.BLUE)
-
     def get_result(self, node: Node):
         """Return 1 for win, -1 for loss"""
         return 1
@@ -121,10 +121,6 @@ class MyAgent(AgentBase):
     def backpropagate(self, node: Node, result: int):
         """MCTS Backpropagation phase"""
 
-    def best_child(self, node: Node, exploration_constant: float):
-        """Return child with best UCT value"""
-        return node
-
     def mcts(self, board: Board, start_time: float):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
@@ -147,7 +143,7 @@ class MyAgent(AgentBase):
             self.playout(leaf)
 
         # Return best child when time's up (maximise exploitation)
-        return self.best_child(root, exploration_constant=0)
+        return root.best_child(self.EXPLORATION_CONSTANT)
 
     def _pick_random_move(self, choices):
         """Pick a random move from the list of choices"""
