@@ -33,7 +33,7 @@ class Node:
         exploration = risk * (math.sqrt(math.log(parent_visits) / visits))
 
         return average_value + exploration
-    
+
     # TODO: Add UCT select function
 
 
@@ -83,8 +83,13 @@ class MyAgent(AgentBase):
     def playout(self, node: Node):
         """MCTS Playout phase
         Apply policy until move is terminal
+        Backpropagate result
         Return result
         """
+        # Backpropagation
+        child = node # Placeholder
+        result = 1
+        self.backpropagate(child, result)
         return self.get_result(node)
 
     def backpropagate(self, node: Node, result: int):
@@ -107,15 +112,13 @@ class MyAgent(AgentBase):
 
             # Selection
             leaf = self.select_node(root)
-            if self.is_terminal(leaf):
-                result = self.get_result(leaf)
-            else:
+
+            if leaf.visits > 0:
                 # Expansion
-                child = self.expand_node(leaf)
-                # Playout
-                result = self.playout(child)
-            # Backpropagation
-            self.backpropagate(child, result)
+                self.expand_node(leaf)
+                leaf = leaf.children[0]
+            # Play/Rollout
+            self.playout(leaf)
 
         # Return best child when time's up (maximise exploitation)
         return self.best_child(root, exploration_constant=0)
