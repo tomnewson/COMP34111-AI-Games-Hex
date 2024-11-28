@@ -74,7 +74,7 @@ class MyAgent(AgentBase):
 
     _choices: list[Move]
     _board_size: int = 11
-    _time_limit: int = 5 # seconds per move
+    _time_limit: int = 1 # seconds per move
     EXPLORATION_CONSTANT = 2
 
     def __init__(self, colour: Colour):
@@ -143,7 +143,8 @@ class MyAgent(AgentBase):
             self.playout(leaf)
 
         # Return best child when time's up (maximise exploitation)
-        return root.best_child(self.EXPLORATION_CONSTANT)
+        # return root.best_child(self.EXPLORATION_CONSTANT)
+        return self._pick_random_move(self._choices) # placeholder return until mcts is implemented
 
     def _pick_random_move(self, choices):
         """Pick a random move from the list of choices"""
@@ -173,8 +174,7 @@ class MyAgent(AgentBase):
         if turn == 2 and choice([0, 1]) == 1:
             return Move(-1, -1)
 
-        # move = self.mcts(board, self._choices, self._time_limit, time.time())
-        move = self._pick_random_move(self._choices)
+        move = self.mcts(board, time.time())
 
         self._choices.remove((move.x, move.y))
         return move
