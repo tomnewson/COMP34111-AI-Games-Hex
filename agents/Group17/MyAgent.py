@@ -28,15 +28,34 @@ class Node:
 
     # Call UCT for each child node in a function to evaluate
     # which one is higher
-    def UCT(self, total_score, visits, parent_visits, risk):
-        average_value = total_score / visits
-        exploration = risk * (math.sqrt(math.log(parent_visits) / visits))
+    def UCT(self, risk):
+        """Upper Confidence Bound for Trees"""
+        if self.visits == 0:
+            return math.inf
+
+        average_value = self.total_score / self.visits
+        # shit way to get the visits of the root node (N)
+        p = self
+        while True:
+            if p.parent is None:
+                root_visits = self.visits
+                break
+            p = p.parent
+
+        exploration = risk * (math.sqrt(math.log(root_visits) / self.visits))
 
         return average_value + exploration
 
-    # TODO: Add UCT select function
     def best_child(self, risk = 2):
-        pass
+        best_child = (None, -math.inf)
+
+        for child in self.children:
+            if child.visits == 0:
+                return child
+            uct = child.UCT(risk)
+            if uct > best_child[1]:
+                best_child = (child, uct)
+        return best_child[0]
 
 
 class MyAgent(AgentBase):
@@ -52,6 +71,7 @@ class MyAgent(AgentBase):
     _choices: list[Move]
     _board_size: int = 11
     _time_limit: int = 5 # seconds per move
+    EXPLORATION_CONSTANT = 2
 
     def __init__(self, colour: Colour):
         super().__init__(colour)
@@ -68,11 +88,11 @@ class MyAgent(AgentBase):
         while True:
             if not node.children:
                 return node # return leaf node
-            node = node.best_child()
+            node = node.best_child(self.EXPLORATION_CONSTANT)
 
     def is_terminal(self, node: Node):
         """Return True if the node is a win/loss, False otherwise"""
-        return True
+        return node.board.has_ended(Colour.RED) or node.board.has_ended(Colour.BLUE)
 
     def get_result(self, node: Node):
         """Return 1 for win, -1 for loss"""
