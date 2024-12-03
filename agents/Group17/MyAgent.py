@@ -21,16 +21,18 @@ class MyAgent(AgentBase):
     class Node:
         """Node class for MCTS"""
         board: Board
+        action: Move | None
         actions: list[Move]
         parent: None
         children: None
         total_score: int
         visits: int
 
-        def __init__(self, board: Board, actions: list[Move], parent = None):
+        def __init__(self, board: Board, actions: list[Move], parent = None, action = None):
             self.board = board
             self.actions = actions
             self.parent = parent
+            self.action = action
             self.children = []
             self.total_score = 0
             self.visits = 0
@@ -38,6 +40,12 @@ class MyAgent(AgentBase):
         def add_child(self, child):
             """Expand node"""
             self.children.append(child)
+
+        def root_visits(self):
+            """Return the number of visits of the root node"""
+            if self.parent is None:
+                return self.visits
+            return self.parent.root_visits()
 
         # Call UCT for each child node in a function to evaluate
         # which one is higher
@@ -47,19 +55,14 @@ class MyAgent(AgentBase):
                 return math.inf
 
             average_value = self.total_score / self.visits
-            # shit way to get the visits of the root node (N)
-            p = self
-            while True:
-                if p.parent is None:
-                    root_visits = self.visits
-                    break
-                p = p.parent
-
-            exploration = risk * (math.sqrt(math.log(root_visits) / self.visits))
+            exploration = risk * (math.sqrt(math.log(self.root_visits()) / self.visits))
 
             return average_value + exploration
 
         def best_child(self, risk = 2):
+            """Return child with highest UCT value
+            will only be called if node has children
+            """
             best_child = (None, -math.inf)
 
             for child in self.children:
@@ -91,6 +94,7 @@ class MyAgent(AgentBase):
                         board=new_board,
                         parent=self,
                         actions=new_actions,
+                        action = move,
                     )
                 )
 
@@ -107,7 +111,7 @@ class MyAgent(AgentBase):
 
     def select_node(self, node: Node):
         """MCTS Selection phase
-        Call best_child() with exploration constant reflecting the balance between exploration and exploitation
+        Call best_child() with exploration constant (risk)
         Repeat until leaf node is reached
         Return selection
         """
@@ -142,7 +146,7 @@ class MyAgent(AgentBase):
     def mcts(self, board: Board, start_time: float):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
-        root = MyAgent.Node(board, actions=self._choices)
+        root = MyAgent.Node(copy.deepcopy(board), actions=copy.deepcopy(self._choices))
 
         while True:
             time_elapsed = time.time() - start_time
@@ -152,17 +156,16 @@ class MyAgent(AgentBase):
             # Selection
             leaf = self.select_node(root)
 
-            if leaf.visits > 0:
+            if leaf.visits > 0 and leaf.actions:
                 # Expansion
                 leaf.expand()
-                if leaf.children:
-                    leaf = leaf.children[0]
+                leaf = leaf.children[0]
             # Play/Rollout
+            # do we want to playout from terminal nodes?
             self.playout(leaf)
 
         # Return best child when time's up (maximise exploitation)
-        # return root.best_child(0)
-        return self._pick_random_move(self._choices) # placeholder return until mcts is implemented
+        return root.best_child(0).action
 
     def _pick_random_move(self, choices):
         """Pick a random move from the list of choices"""
@@ -192,6 +195,5 @@ class MyAgent(AgentBase):
             return Move(-1, -1)
 
         move = self.mcts(board, time.time())
-
         self._choices.remove(move)
         return move
