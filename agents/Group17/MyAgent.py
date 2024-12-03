@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, shuffle
 import time
 import math
 import copy
@@ -21,7 +21,6 @@ class MyAgent(AgentBase):
     class Node:
         """Node class for MCTS"""
         board: Board
-        actions: list[Move]
         parent: None
         children: None
         total_score: int
@@ -129,11 +128,24 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        # Backpropagation
-        child = node # Placeholder
-        result = 1
-        self.backpropagate(child, result)
-        return self.get_result(node)
+        # # Backpropagation
+        # child = node # Placeholder
+        # result = 1
+        # self.backpropagate(child, result)
+        # return self.get_result(node)
+        
+        if node.is_terminal:
+            return node.total_score
+
+        # action = choice(node.choices)
+        # node = simulate(action, node)
+
+        available_actions = node.choices
+        shuffle(available_actions)
+
+        
+
+        return self.playout(node)
 
     def backpropagate(self, node: Node, result: int):
         """MCTS Backpropagation phase"""
