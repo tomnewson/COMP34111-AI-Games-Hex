@@ -81,29 +81,31 @@ class MyAgent(AgentBase):
             add the new node as a child of the current node
             """
             for move in self.actions:
+                new_actions = copy.deepcopy(self.actions)
+                new_actions.remove(move)
                 self.add_child(
                     MyAgent.Node(
                         board=self._expand_board(self.board, move),
                         parent=self,
-                        actions=self.actions.copy().remove(move),
+                        actions=new_actions,
                     )
                 )
 
         def _expand_board(self, board, move):
             """Make move on board in node expansion"""
             new_board = copy.deepcopy(board)
-            new_board.set_tile_colour(move[0], move[1], MyAgent.colour)
+            new_board.set_tile_colour(move.x, move.y, MyAgent.colour)
             return new_board
 
     _choices: list[Move]
     _board_size: int = 11
-    _time_limit: float = 0.5 # seconds per move
+    _time_limit: float = 0.1 # seconds per move
     EXPLORATION_CONSTANT = 2
 
     def __init__(self, colour: Colour):
         super().__init__(colour)
         self._choices = [
-            (i, j) for i in range(self._board_size) for j in range(self._board_size)
+            Move(i, j) for i in range(self._board_size) for j in range(self._board_size)
         ]
 
     def select_node(self, node: Node):
@@ -143,8 +145,7 @@ class MyAgent(AgentBase):
     def mcts(self, board: Board, start_time: float):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
-
-        root = MyAgent.Node(board, self._choices)
+        root = MyAgent.Node(board, actions=self._choices)
 
         while True:
             time_elapsed = time.time() - start_time
@@ -156,9 +157,9 @@ class MyAgent(AgentBase):
 
             if leaf.visits > 0:
                 # Expansion
-                pass
-                # leaf.expand()
-                # leaf = leaf.children[0]
+                leaf.expand()
+                if leaf.children:
+                    leaf = leaf.children[0]
             # Play/Rollout
             self.playout(leaf)
 
@@ -168,8 +169,7 @@ class MyAgent(AgentBase):
 
     def _pick_random_move(self, choices):
         """Pick a random move from the list of choices"""
-        x, y = choice(choices)
-        return Move(x, y)
+        return choice(choices)
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
         """The game engine will call this method to request a move from the agent.
@@ -188,7 +188,7 @@ class MyAgent(AgentBase):
         """
 
         if opp_move and opp_move != Move(-1, -1):
-            self._choices.remove((opp_move.x, opp_move.y))
+            self._choices.remove(opp_move)
 
         # Swap with 50% chance
         if turn == 2 and choice([0, 1]) == 1:
@@ -196,5 +196,5 @@ class MyAgent(AgentBase):
 
         move = self.mcts(board, time.time())
 
-        self._choices.remove((move.x, move.y))
+        self._choices.remove(move)
         return move
