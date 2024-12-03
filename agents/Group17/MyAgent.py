@@ -27,7 +27,7 @@ class MyAgent(AgentBase):
         total_score: int
         visits: int
 
-        def __init__(self, board: Board, actions = list[Move], parent = None):
+        def __init__(self, board: Board, actions: list[Move], parent = None):
             self.board = board
             self.actions = actions
             self.parent = parent
@@ -80,7 +80,6 @@ class MyAgent(AgentBase):
             for each action, create a new node with the resulting state
             add the new node as a child of the current node
             """
-
             for move in self.actions:
                 self.add_child(
                     MyAgent.Node(
@@ -93,7 +92,7 @@ class MyAgent(AgentBase):
         def _expand_board(self, board, move):
             """Make move on board in node expansion"""
             new_board = copy.deepcopy(board)
-            new_board[move.x][move.y].colour = MyAgent.colour
+            new_board.set_tile_colour(move[0], move[1], MyAgent.colour)
             return new_board
 
     _choices: list[Move]
@@ -157,8 +156,9 @@ class MyAgent(AgentBase):
 
             if leaf.visits > 0:
                 # Expansion
-                leaf.expand()
-                leaf = leaf.children[0]
+                pass
+                # leaf.expand()
+                # leaf = leaf.children[0]
             # Play/Rollout
             self.playout(leaf)
 
