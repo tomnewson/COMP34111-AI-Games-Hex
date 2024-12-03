@@ -83,19 +83,16 @@ class MyAgent(AgentBase):
             for move in self.actions:
                 new_actions = copy.deepcopy(self.actions)
                 new_actions.remove(move)
+                new_board = copy.deepcopy(self.board)
+                new_board.set_tile_colour(move.x, move.y, MyAgent.colour)
+
                 self.add_child(
                     MyAgent.Node(
-                        board=self._expand_board(self.board, move),
+                        board=new_board,
                         parent=self,
                         actions=new_actions,
                     )
                 )
-
-        def _expand_board(self, board, move):
-            """Make move on board in node expansion"""
-            new_board = copy.deepcopy(board)
-            new_board.set_tile_colour(move.x, move.y, MyAgent.colour)
-            return new_board
 
     _choices: list[Move]
     _board_size: int = 11
