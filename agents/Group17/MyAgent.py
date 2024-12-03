@@ -136,6 +136,10 @@ class MyAgent(AgentBase):
 
     def backpropagate(self, node: Node, result: int):
         """MCTS Backpropagation phase"""
+        while node is not None:
+            node.visits += 1
+            node.total_score += result
+            node = node.parent
 
     def mcts(self, board: Board, start_time: float):
         """Monte Carlo Tree Search
