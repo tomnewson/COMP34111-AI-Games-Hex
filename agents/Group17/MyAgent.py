@@ -21,13 +21,15 @@ class MyAgent(AgentBase):
     class Node:
         """Node class for MCTS"""
         board: Board
+        actions: list[Move]
         parent: None
         children: None
         total_score: int
         visits: int
 
-        def __init__(self, board: Board, parent = None):
+        def __init__(self, board: Board, actions = list[Move], parent = None):
             self.board = board
+            self.actions = actions
             self.parent = parent
             self.children = []
             self.total_score = 0
@@ -74,22 +76,17 @@ class MyAgent(AgentBase):
 
         def expand(self):
             """MCTS Expansion phase
-            what are the node's choices?
-            for each choice, create a new node with the resulting state
+            what are the node's actions?
+            for each action, create a new node with the resulting state
             add the new node as a child of the current node
-            return node
             """
-            valid_moves = []
-            for i in range(self.board.size):
-                for j in range(self.board.size):
-                    if self.board[i][j].colour is None:
-                        valid_moves.append(Move(i, j))
 
-            for move in valid_moves:
+            for move in self.actions:
                 self.add_child(
                     MyAgent.Node(
                         board=self._expand_board(self.board, move),
                         parent=self,
+                        actions=self.actions.copy().remove(move),
                     )
                 )
 
@@ -144,7 +141,7 @@ class MyAgent(AgentBase):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
 
-        root = MyAgent.Node(board)
+        root = MyAgent.Node(board, self._choices)
 
         while True:
             time_elapsed = time.time() - start_time
