@@ -1,66 +1,12 @@
 from random import choice
 import time
 import math
+import copy
 
 from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
-
-class Node:
-    """Node class for MCTS"""
-    board: Board
-    parent: None
-    children: None
-    total_score: int
-    visits: int
-
-    def __init__(self, board: Board, parent = None, total_score = 0, visits = 0):
-        self.board = board
-        self.parent = parent
-        self.children = []
-        self.total_score = total_score
-        self.visits = visits
-
-    def add_child(self, child):
-        """Expand node"""
-        self.children.append(child)
-
-    # Call UCT for each child node in a function to evaluate
-    # which one is higher
-    def UCT(self, risk):
-        """Upper Confidence Bound for Trees"""
-        if self.visits == 0:
-            return math.inf
-
-        average_value = self.total_score / self.visits
-        # shit way to get the visits of the root node (N)
-        p = self
-        while True:
-            if p.parent is None:
-                root_visits = self.visits
-                break
-            p = p.parent
-
-        exploration = risk * (math.sqrt(math.log(root_visits) / self.visits))
-
-        return average_value + exploration
-
-    def best_child(self, risk = 2):
-        best_child = (None, -math.inf)
-
-        for child in self.children:
-            if child.visits == 0:
-                return child
-            uct = child.UCT(risk)
-            if uct > best_child[1]:
-                best_child = (child, uct)
-        return best_child[0]
-
-    def is_terminal(self):
-        """Return True if the node is a win/loss, False otherwise"""
-        return self.board.has_ended(Colour.RED) or self.board.has_ended(Colour.BLUE)
-
 
 class MyAgent(AgentBase):
     """This class describes the default Hex agent. It will randomly send a
@@ -72,9 +18,90 @@ class MyAgent(AgentBase):
     You CANNOT modify the AgentBase class, otherwise your agent might not function.
     """
 
+    class Node:
+        """Node class for MCTS"""
+        board: Board
+        parent: None
+        children: None
+        total_score: int
+        visits: int
+
+        def __init__(self, board: Board, parent = None):
+            self.board = board
+            self.parent = parent
+            self.children = []
+            self.total_score = 0
+            self.visits = 0
+
+        def add_child(self, child):
+            """Expand node"""
+            self.children.append(child)
+
+        # Call UCT for each child node in a function to evaluate
+        # which one is higher
+        def UCT(self, risk):
+            """Upper Confidence Bound for Trees"""
+            if self.visits == 0:
+                return math.inf
+
+            average_value = self.total_score / self.visits
+            # shit way to get the visits of the root node (N)
+            p = self
+            while True:
+                if p.parent is None:
+                    root_visits = self.visits
+                    break
+                p = p.parent
+
+            exploration = risk * (math.sqrt(math.log(root_visits) / self.visits))
+
+            return average_value + exploration
+
+        def best_child(self, risk = 2):
+            best_child = (None, -math.inf)
+
+            for child in self.children:
+                if child.visits == 0:
+                    return child
+                uct = child.UCT(risk)
+                if uct > best_child[1]:
+                    best_child = (child, uct)
+            return best_child[0]
+
+        def is_terminal(self):
+            """Return True if the node is a win/loss, False otherwise"""
+            return self.board.has_ended(Colour.RED) or self.board.has_ended(Colour.BLUE)
+
+        def expand(self):
+            """MCTS Expansion phase
+            what are the node's choices?
+            for each choice, create a new node with the resulting state
+            add the new node as a child of the current node
+            return node
+            """
+            valid_moves = []
+            for i in range(self.board.size):
+                for j in range(self.board.size):
+                    if self.board[i][j].colour is None:
+                        valid_moves.append(Move(i, j))
+
+            for move in valid_moves:
+                self.add_child(
+                    MyAgent.Node(
+                        board=self._expand_board(self.board, move),
+                        parent=self,
+                    )
+                )
+
+        def _expand_board(self, board, move):
+            """Make move on board in node expansion"""
+            new_board = copy.deepcopy(board)
+            new_board[move.x][move.y].colour = MyAgent.colour
+            return new_board
+
     _choices: list[Move]
     _board_size: int = 11
-    _time_limit: int = 1 # seconds per move
+    _time_limit: float = 0.5 # seconds per move
     EXPLORATION_CONSTANT = 2
 
     def __init__(self, colour: Colour):
@@ -98,14 +125,6 @@ class MyAgent(AgentBase):
         """Return 1 for win, -1 for loss"""
         return 1
 
-    def expand_node(self, node: Node):
-        """MCTS Expansion phase
-        Make untried move from node
-        Add to tree as a child
-        Return child
-        """
-        return node
-
     def playout(self, node: Node):
         """MCTS Playout phase
         Apply policy until move is terminal
@@ -125,7 +144,7 @@ class MyAgent(AgentBase):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
 
-        root = Node(board)
+        root = MyAgent.Node(board)
 
         while True:
             time_elapsed = time.time() - start_time
@@ -137,7 +156,7 @@ class MyAgent(AgentBase):
 
             if leaf.visits > 0:
                 # Expansion
-                self.expand_node(leaf)
+                leaf.expand()
                 leaf = leaf.children[0]
             # Play/Rollout
             self.playout(leaf)
