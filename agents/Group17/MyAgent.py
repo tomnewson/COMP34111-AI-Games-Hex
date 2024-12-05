@@ -128,24 +128,32 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        # # Backpropagation
-        # child = node # Placeholder
-        # result = 1
-        # self.backpropagate(child, result)
-        # return self.get_result(node)
+
+        def simulate(available_actions: list[Move], mock_board: Board):
+            board = mock_board
+            available_actions = node.choices
+            shuffle(available_actions)
+            player = self.colour
+
+            while len(available_actions) > 0:
+                action = available_actions.pop()
+                board.set_tile_colour(action.x, action.y, self.colour)
+
+            if board.has_ended():
+                return board.get_winner()
+
+        mock_board = copy.deepcopy(node.board)
+        value = 0
+            
+        # Repeat simulation five times, get average value
+        for i in range(5):
+            if self.colour == simulate(self.colour, mock_board):
+                value += 1
         
-        if node.is_terminal:
-            return node.total_score
+        average_value = value / 5
 
-        # action = choice(node.choices)
-        # node = simulate(action, node)
+        return average_value
 
-        available_actions = node.choices
-        shuffle(available_actions)
-
-        
-
-        return self.playout(node)
 
     def backpropagate(self, node: Node, result: int):
         """MCTS Backpropagation phase"""
@@ -173,10 +181,11 @@ class MyAgent(AgentBase):
                 if leaf.children:
                     leaf = leaf.children[0]
             # Play/Rollout
-            self.playout(leaf)
+            playout_value = self.playout(leaf)
+            self.backpropagate(leaf, playout_value)
 
         # Return best child when time's up (maximise exploitation)
-        # return root.best_child(0)
+        return root.best_child(0).action
         return self._pick_random_move(self._choices) # placeholder return until mcts is implemented
 
     def _pick_random_move(self, choices):
