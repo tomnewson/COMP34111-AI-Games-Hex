@@ -1,7 +1,5 @@
 from random import choice, shuffle
-import time
 import math
-import copy
 
 from src.AgentBase import AgentBase
 from src.Board import Board
@@ -58,7 +56,7 @@ class GoodAgent(AgentBase):
     def expansion(self, node: Node):
         # expand all children at once
         for action in node.available_actions:
-            new_state: Board = copy.deepcopy(node.state)
+            new_state: Board = self.copy_board(node.state)
             colour = self.colour if node.our_turn else self.opp_colour()
             new_state.set_tile_colour(action.x, action.y, colour)
             new_available_actions = [a for a in node.available_actions if a != action]
@@ -70,14 +68,21 @@ class GoodAgent(AgentBase):
                 prev_action=action,
             ))
 
+    def copy_board(self, board: Board):
+        new_board = Board(board_size=self._board_size)
+        for i in range(self._board_size):
+            for j in range(self._board_size):
+                new_board.set_tile_colour(i, j, board.tiles[i][j].colour)
+        return new_board
+
     def simulation(self, node: Node):
         # play until no available actions remain
         available_actions = node.available_actions.copy()
-        state = copy.deepcopy(node.state)
+        state = self.copy_board(node.state)
         our_turn = not node.our_turn
+        shuffle(available_actions)
         while available_actions:
-            action = choice(available_actions)
-            available_actions.remove(action)
+            action = available_actions.pop()
             state.set_tile_colour(action.x, action.y, self.colour if our_turn else self.opp_colour())
             our_turn = not our_turn
         return state.has_ended(self.colour)
@@ -101,7 +106,7 @@ class GoodAgent(AgentBase):
         self._parent_node_visits = 0
         # add first layer of children
         for action in available_actions:
-            new_state: Board = copy.deepcopy(board)
+            new_state: Board = self.copy_board(board)
             new_state.set_tile_colour(action.x, action.y, self.colour)
             new_available_actions = [a for a in available_actions if a != action]
             root.children.append(Node(
@@ -126,8 +131,11 @@ class GoodAgent(AgentBase):
             # Backpropagation
             self.backpropagation(leaf, win)
 
-        print(f"values: {', '.join([f'{child.value}/{child.visits}' for child in root.children])}")
-        return max(root.children, key=lambda child: child.UCT(0, self._parent_node_visits)).prev_action
+        node = max(root.children, key=lambda child: child.UCT(0, self._parent_node_visits))
+        print(self._parent_node_visits)
+        print(f"values: {', '.join([f'{child.value}/{child.visits}' for child in root.children])}\n")
+        print(f"values: {', '.join([f'{child.value}/{child.visits}' for child in root.children[0].children])}\n")
+        return node.prev_action
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
         """The game engine will call this method to request a move from the agent.
