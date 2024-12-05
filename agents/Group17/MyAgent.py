@@ -33,8 +33,9 @@ class MyAgent(AgentBase):
         children: None
         total_score: int
         visits: int
+        our_turn: bool
 
-        def __init__(self, board: Board, actions: list[Move], parent = None, action = None):
+        def __init__(self, board: Board, actions: list[Move], our_turn: bool, parent = None, action = None):
             self.board = board
             self.actions = actions
             self.parent = parent
@@ -42,6 +43,7 @@ class MyAgent(AgentBase):
             self.children = []
             self.total_score = 0
             self.visits = 0
+            self.our_turn = our_turn
 
         def add_child(self, child):
             """Expand node"""
@@ -73,21 +75,23 @@ class MyAgent(AgentBase):
                     best_child = (child, uct)
             return best_child[0]
 
-        def expand(self):
+        def expand(self, colours: list[Colour]):
             """MCTS Expansion phase
             what are the node's actions?
             for each action, create a new node with the resulting state
             add the new node as a child of the current node
             """
             for move in self.actions:
-                new_actions = copy.deepcopy(self.actions)
+                new_actions = self.actions.copy()
                 new_actions.remove(move)
                 new_board = copy.deepcopy(self.board)
-                new_board.set_tile_colour(move.x, move.y, MyAgent.colour)
+                colour = colours[0] if self.our_turn else colours[1]
+                new_board.set_tile_colour(move.x, move.y, colour)
 
                 self.add_child(
                     MyAgent.Node(
                         board=new_board,
+                        our_turn=not self.our_turn,
                         parent=self,
                         actions=new_actions,
                         action = move,
@@ -122,9 +126,9 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        available_actions = copy.deepcopy(node.actions)
+        available_actions = node.actions.copy()
         shuffle(available_actions)
-        final_board = self.play(copy.deepcopy(node.board), available_actions, False)
+        final_board = self.play(copy.deepcopy(node.board), available_actions, not node.our_turn)
         result = self.get_result(final_board)
         self.backpropagate(node, result)
 
@@ -152,7 +156,7 @@ class MyAgent(AgentBase):
     def mcts(self, board: Board, start_time: float):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
-        root = MyAgent.Node(copy.deepcopy(board), actions=copy.deepcopy(self._choices))
+        root = MyAgent.Node(board, actions=self._choices, our_turn=True)
         sims = 0
         while True:
             # time_elapsed = time.time() - start_time
@@ -167,7 +171,7 @@ class MyAgent(AgentBase):
 
             if leaf.visits > 0 and leaf.actions:
                 # Expansion
-                leaf.expand()
+                leaf.expand([self.colour, self.opp_colour()])
                 leaf = leaf.children[0]
             # Play/Rollout
             # do we want to playout from terminal nodes?
@@ -203,8 +207,8 @@ class MyAgent(AgentBase):
         if opp_move and opp_move != Move(-1, -1):
             self._choices.remove(opp_move)
 
-        # Swap with 50% chance
-        if turn == 2 and choice([0, 1]) == 1:
+        # ALWAYS SWAP
+        if turn == 2:
             return Move(-1, -1)
 
         move = self.mcts(board, time.time())
