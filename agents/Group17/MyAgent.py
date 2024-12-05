@@ -124,7 +124,7 @@ class MyAgent(AgentBase):
         """
         available_actions = copy.deepcopy(node.actions)
         shuffle(available_actions)
-        final_board = self.play(copy.deepcopy(node.board), available_actions, True)
+        final_board = self.play(copy.deepcopy(node.board), available_actions, False)
         result = self.get_result(final_board)
         self.backpropagate(node, result)
 
@@ -135,8 +135,7 @@ class MyAgent(AgentBase):
             return board
 
         colour = self.colour if our_turn else self.opp_colour()
-        move = choice(available_actions)
-        available_actions.remove(move)
+        move = available_actions.pop()
 
         board.set_tile_colour(move.x, move.y, colour)
         return self.play(board, available_actions, not our_turn)
@@ -154,15 +153,14 @@ class MyAgent(AgentBase):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
         root = MyAgent.Node(copy.deepcopy(board), actions=copy.deepcopy(self._choices))
-        # sims = -1
+        sims = 0
         while True:
-            # sims += 1
-
-            # if sims >= 100:
+            # time_elapsed = time.time() - start_time
+            # if time_elapsed >= self._time_limit:
             #     break
-            time_elapsed = time.time() - start_time
-            if time_elapsed >= self._time_limit:
+            if sims >= 100:
                 break
+            sims += 1
 
             # Selection
             leaf = self.select_node(root)
@@ -177,7 +175,7 @@ class MyAgent(AgentBase):
 
         if root.children:
             move = root.best_child(0)
-            print(f"move: {move.action}, value: {move.total_score} / {move.visits}")
+            print(f"move: {move.action}, value: {move.total_score} / {move.visits}, total simulations: {sims} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             return move.action
         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nfailed, picking randomly\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
         return self._pick_random_move(self._choices)
