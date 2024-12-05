@@ -1,4 +1,5 @@
 from random import choice
+from random import shuffle
 import time
 import math
 import copy
@@ -121,10 +122,11 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        final_board = self.play(node.board, node.actions, True)
+        available_actions = copy.deepcopy(node.actions)
+        shuffle(available_actions)
+        final_board = self.play(copy.deepcopy(node.board), available_actions, True)
         result = self.get_result(final_board)
         self.backpropagate(node, result)
-        print(f"### PLAYOUT COMPLETE: {result}")
 
     def play(self, board: Board, available_actions: list[Move], our_turn: bool):
         """Play until no actions
@@ -132,15 +134,12 @@ class MyAgent(AgentBase):
         if not available_actions:
             return board
 
-        new_actions = copy.deepcopy(available_actions)
         colour = self.colour if our_turn else self.opp_colour()
-        move = choice(new_actions)
-        new_actions.remove(move)
+        move = choice(available_actions)
+        available_actions.remove(move)
 
-        new_board = copy.deepcopy(board)
-        new_board.set_tile_colour(move.x, move.y, colour)
-
-        return self.play(new_board, new_actions, not our_turn)
+        board.set_tile_colour(move.x, move.y, colour)
+        return self.play(board, available_actions, not our_turn)
 
 
     def backpropagate(self, node: Node, result: float):
@@ -155,16 +154,15 @@ class MyAgent(AgentBase):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
         root = MyAgent.Node(copy.deepcopy(board), actions=copy.deepcopy(self._choices))
-        print(self.colour)
-        sims = -1
+        # sims = -1
         while True:
-            sims += 1
+            # sims += 1
 
-            if sims >= 30:
-                break
-            # time_elapsed = time.time() - start_time
-            # if time_elapsed >= self._time_limit:
+            # if sims >= 100:
             #     break
+            time_elapsed = time.time() - start_time
+            if time_elapsed >= self._time_limit:
+                break
 
             # Selection
             leaf = self.select_node(root)
