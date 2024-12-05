@@ -30,10 +30,10 @@ class Node:
         self.prev_action = prev_action
         self.children = []
 
-    def UCT(self, exploitation_constant, parent_visits):
+    def UCT(self, risk, parent_visits):
         if self.visits == 0:
             return math.inf
-        return self.value / self.visits + exploitation_constant * math.sqrt(math.log(parent_visits) / self.visits)
+        return self.value / self.visits + risk * math.sqrt(math.log(parent_visits) / self.visits)
 
 
 class GoodAgent(AgentBase):
@@ -80,12 +80,15 @@ class GoodAgent(AgentBase):
             available_actions.remove(action)
             state.set_tile_colour(action.x, action.y, self.colour if our_turn else self.opp_colour())
             our_turn = not our_turn
-        return 1 if state.has_ended(self.colour) else 0
+        return state.has_ended(self.colour)
 
-    def backpropagation(self, node: Node, result: int):
+    def backpropagation(self, node: Node, win: bool):
         while node:
             node.visits += 1
-            node.value += result
+            if win and node.our_turn:
+                node.value += 1
+            elif not win and not node.our_turn:
+                node.value += 1
             node = node.parent
         self._parent_node_visits += 1
 
@@ -119,9 +122,9 @@ class GoodAgent(AgentBase):
                 self.expansion(leaf)
                 leaf = choice(leaf.children)
             # Simulation
-            result = self.simulation(leaf)
+            win = self.simulation(leaf)
             # Backpropagation
-            self.backpropagation(leaf, result)
+            self.backpropagation(leaf, win)
 
         print(f"values: {', '.join([f'{child.value}/{child.visits}' for child in root.children])}")
         return max(root.children, key=lambda child: child.UCT(0, self._parent_node_visits)).prev_action
