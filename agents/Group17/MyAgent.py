@@ -18,6 +18,11 @@ class MyAgent(AgentBase):
     You CANNOT modify the AgentBase class, otherwise your agent might not function.
     """
 
+    _choices: list[Move]
+    _board_size: int = 11
+    _time_limit: float = 10 # seconds per move
+    EXPLORATION_CONSTANT = 2
+
     class Node:
         """Node class for MCTS"""
         board: Board
@@ -73,16 +78,13 @@ class MyAgent(AgentBase):
                     best_child = (child, uct)
             return best_child[0]
 
-        def is_terminal(self):
-            """Return True if the node is a win/loss, False otherwise"""
-            return self.board.has_ended(Colour.RED) or self.board.has_ended(Colour.BLUE)
-
         def expand(self):
             """MCTS Expansion phase
             what are the node's actions?
             for each action, create a new node with the resulting state
             add the new node as a child of the current node
             """
+            print("?>@:~:?>@:?>:@?>:@?>:@")
             for move in self.actions:
                 new_actions = copy.deepcopy(self.actions)
                 new_actions.remove(move)
@@ -97,11 +99,7 @@ class MyAgent(AgentBase):
                         action = move,
                     )
                 )
-
-    _choices: list[Move]
-    _board_size: int = 11
-    _time_limit: float = 0.1 # seconds per move
-    EXPLORATION_CONSTANT = 2
+                # print(self.children, "£$&*()&^%$^&*")
 
     def __init__(self, colour: Colour):
         super().__init__(colour)
@@ -120,9 +118,10 @@ class MyAgent(AgentBase):
                 return node # return leaf node
             node = node.best_child(self.EXPLORATION_CONSTANT)
 
-    def get_result(self, node: Node):
-        """Return 1 for win, -1 for loss"""
-        return 1
+    def get_result(self, board: Board):
+        if board.has_ended(self.colour):
+            return 1
+        return -1
 
     def playout(self, node: Node):
         """MCTS Playout phase
@@ -130,13 +129,32 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        # Backpropagation
-        child = node # Placeholder
-        result = 1
-        self.backpropagate(child, result)
-        return self.get_result(node)
+        attempts = 3
+        total_res = 0
+        for _ in range(attempts):
+            final_board = self.play(node.board, node.actions, False)
+            total_res += self.get_result(final_board)
+        self.backpropagate(node, total_res / attempts)
+        print("##################", total_res)
 
-    def backpropagate(self, node: Node, result: int):
+    def play(self, board: Board, available_actions: list[Move], our_turn: bool):
+        """Play until no actions
+        Return board"""
+        if not available_actions:
+            return board
+
+        new_actions = copy.deepcopy(available_actions)
+        colour = self.colour if our_turn else self.opp_colour()
+        move = choice(new_actions)
+        new_actions.remove(move)
+
+        new_board = copy.deepcopy(board)
+        new_board.set_tile_colour(move.x, move.y, colour)
+
+        return self.play(new_board, new_actions, not our_turn)
+
+
+    def backpropagate(self, node: Node, result: float):
         """MCTS Backpropagation phase"""
         node.visits += 1
         node.total_score += result
@@ -157,16 +175,26 @@ class MyAgent(AgentBase):
             # Selection
             leaf = self.select_node(root)
 
+            print(leaf.visits)
             if leaf.visits > 0 and leaf.actions:
                 # Expansion
                 leaf.expand()
+                # print(leaf.children, ")((*((*&(*&*&(*&(&**&)))))))")
                 leaf = leaf.children[0]
             # Play/Rollout
             # do we want to playout from terminal nodes?
             self.playout(leaf)
+            print("~~~~~~~~~~~~~~~~~~~~~")
 
-        # Return best child when time's up (maximise exploitation)
-        return root.best_child(0).action
+        # print(leaf.children, root.children, "!!!!!!!!!!")
+        if root.children:
+            for child in root.children:
+                print(child.total_score)
+            move = root.best_child(0).action
+            print(f"move: {move}, value: {root.best_child(0).total_score }")
+            return move
+        print("failed, picking randomly")
+        return -1
 
     def _pick_random_move(self, choices):
         """Pick a random move from the list of choices"""
@@ -196,5 +224,6 @@ class MyAgent(AgentBase):
             return Move(-1, -1)
 
         move = self.mcts(board, time.time())
+        print(move)
         self._choices.remove(move)
         return move
