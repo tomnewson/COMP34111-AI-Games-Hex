@@ -121,7 +121,7 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        final_board = self.play(node.board, node.actions, False)
+        final_board = self.play(node.board, node.actions, True)
         result = self.get_result(final_board)
         self.backpropagate(node, result)
         print(f"### PLAYOUT COMPLETE: {result}")
@@ -156,11 +156,15 @@ class MyAgent(AgentBase):
         Each node in tree is a Board"""
         root = MyAgent.Node(copy.deepcopy(board), actions=copy.deepcopy(self._choices))
         print(self.colour)
-
+        sims = -1
         while True:
-            time_elapsed = time.time() - start_time
-            if time_elapsed >= self._time_limit:
+            sims += 1
+
+            if sims >= 30:
                 break
+            # time_elapsed = time.time() - start_time
+            # if time_elapsed >= self._time_limit:
+            #     break
 
             # Selection
             leaf = self.select_node(root)
