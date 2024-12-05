@@ -20,7 +20,7 @@ class MyAgent(AgentBase):
 
     _choices: list[Move]
     _board_size: int = 11
-    _time_limit: float = 10 # seconds per move
+    _time_limit: float = 5 # seconds per move
     EXPLORATION_CONSTANT = 2
 
     class Node:
@@ -46,12 +46,6 @@ class MyAgent(AgentBase):
             """Expand node"""
             self.children.append(child)
 
-        def root_visits(self):
-            """Return the number of visits of the root node"""
-            if self.parent is None:
-                return self.visits
-            return self.parent.root_visits()
-
         # Call UCT for each child node in a function to evaluate
         # which one is higher
         def UCT(self, risk):
@@ -60,7 +54,7 @@ class MyAgent(AgentBase):
                 return math.inf
 
             average_value = self.total_score / self.visits
-            exploration = risk * (math.sqrt(math.log(self.root_visits()) / self.visits))
+            exploration = risk * (math.sqrt(math.log(self.parent.visits) / self.visits))
 
             return average_value + exploration
 
@@ -84,7 +78,6 @@ class MyAgent(AgentBase):
             for each action, create a new node with the resulting state
             add the new node as a child of the current node
             """
-            print("?>@:~:?>@:?>:@?>:@?>:@")
             for move in self.actions:
                 new_actions = copy.deepcopy(self.actions)
                 new_actions.remove(move)
@@ -99,7 +92,6 @@ class MyAgent(AgentBase):
                         action = move,
                     )
                 )
-                # print(self.children, "£$&*()&^%$^&*")
 
     def __init__(self, colour: Colour):
         super().__init__(colour)
@@ -129,13 +121,10 @@ class MyAgent(AgentBase):
         Backpropagate result
         Return result
         """
-        attempts = 3
-        total_res = 0
-        for _ in range(attempts):
-            final_board = self.play(node.board, node.actions, False)
-            total_res += self.get_result(final_board)
-        self.backpropagate(node, total_res / attempts)
-        print("##################", total_res)
+        final_board = self.play(node.board, node.actions, False)
+        result = self.get_result(final_board)
+        self.backpropagate(node, result)
+        print(f"### PLAYOUT COMPLETE: {result}")
 
     def play(self, board: Board, available_actions: list[Move], our_turn: bool):
         """Play until no actions
@@ -166,6 +155,7 @@ class MyAgent(AgentBase):
         """Monte Carlo Tree Search
         Each node in tree is a Board"""
         root = MyAgent.Node(copy.deepcopy(board), actions=copy.deepcopy(self._choices))
+        print(self.colour)
 
         while True:
             time_elapsed = time.time() - start_time
@@ -175,26 +165,20 @@ class MyAgent(AgentBase):
             # Selection
             leaf = self.select_node(root)
 
-            print(leaf.visits)
             if leaf.visits > 0 and leaf.actions:
                 # Expansion
                 leaf.expand()
-                # print(leaf.children, ")((*((*&(*&*&(*&(&**&)))))))")
                 leaf = leaf.children[0]
             # Play/Rollout
             # do we want to playout from terminal nodes?
             self.playout(leaf)
-            print("~~~~~~~~~~~~~~~~~~~~~")
 
-        # print(leaf.children, root.children, "!!!!!!!!!!")
         if root.children:
-            for child in root.children:
-                print(child.total_score)
-            move = root.best_child(0).action
-            print(f"move: {move}, value: {root.best_child(0).total_score }")
-            return move
-        print("failed, picking randomly")
-        return -1
+            move = root.best_child(0)
+            print(f"move: {move.action}, value: {move.total_score} / {move.visits}")
+            return move.action
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nfailed, picking randomly\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+        return self._pick_random_move(self._choices)
 
     def _pick_random_move(self, choices):
         """Pick a random move from the list of choices"""
@@ -224,6 +208,5 @@ class MyAgent(AgentBase):
             return Move(-1, -1)
 
         move = self.mcts(board, time.time())
-        print(move)
         self._choices.remove(move)
         return move
