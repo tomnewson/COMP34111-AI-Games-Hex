@@ -7,12 +7,10 @@ from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
-from haswin import has_winning_chain
+from agents.Group17.haswin import has_winning_chain
 
 
 def winvalue(B: Board, player: Colour):
-    print("**********************")
-    print(11)
     """
     Computes the winvalue of a given board configuration B for player.
 
@@ -23,13 +21,16 @@ def winvalue(B: Board, player: Colour):
     Returns:
         tuple: (v, X) where v is 1/-1 if the player wins/loses and X is a win-set.
     """
+    tiles = [[tile.colour for tile in row] for row in B.tiles]
     # Check if the current player has a winning chain
-    if has_winning_chain(B, player):
+    if has_winning_chain(tiles, player):
+        print("PLAYER WIN")
         return (+1, set())
 
     opponent = get_opponent(player)
     # Check if the opponent has a winning chain
-    if has_winning_chain(B, opponent):
+    if has_winning_chain(tiles, opponent):
+        print("OPPONENT WIN")
         return (-1, set())
 
     # Initialize W (the win-set) and M (the must-play cells)
@@ -37,7 +38,10 @@ def winvalue(B: Board, player: Colour):
     M = get_unoccupied_cells(B)
 
     # Iterate while there are still cells to consider
+    loop = 0
     while M:
+        loop += 1
+        print("loop" + str(loop))
         cell = M.pop()
 
         B_next = copy.deepcopy(B)
@@ -75,3 +79,54 @@ def sim_move(SIM_B: Board, cell: tuple[int, int], player: Colour):
     x, y = cell
     SIM_B.tiles[x][y].colour = player
     return SIM_B
+
+def select_best_move(B: Board, player: Colour) -> Move:
+    """
+    Selects the best move for the agent using the winvalue algorithm.
+
+    Args:
+        B: The current board configuration.
+        player: The player's colour.
+
+    Returns:
+        Move: The best move for the player.
+    """
+    unoccupied_cells = get_unoccupied_cells(B)
+    best_move = None
+    best_value = -math.inf
+    smallest_win_set_size = math.inf
+
+    for cell in unoccupied_cells:
+        # Create a deep copy of the board to simulate the move
+        simulated_board = copy.deepcopy(B)
+        sim_move(simulated_board, cell, player)
+
+        # Evaluate the board state after the simulated move
+        value, win_set = winvalue(simulated_board, get_opponent(player))
+
+        # If this move guarantees a loss
+        if value == -1:
+            return Move(cell[0], cell[1])
+
+
+        # If this move guarantees a win, return it immediately
+        if value == +1:
+            return Move(cell[0], cell[1])
+
+        # If the value is better, prioritize this move
+        if value > best_value:
+            best_value = value
+            best_move = cell
+            smallest_win_set_size = len(win_set)
+
+        # If the value is the same, prioritize the smaller win-set
+        elif value == best_value and len(win_set) < smallest_win_set_size:
+            best_move = cell
+            smallest_win_set_size = len(win_set)
+
+    if best_move is None:
+        print("none")
+        # If no winning move is found, choose a random cell as a fallback
+        return -1
+
+    return Move(best_move[0], best_move[1])

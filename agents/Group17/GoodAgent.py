@@ -3,6 +3,7 @@ from time import time
 import math
 
 from agents.Group17.haswin import has_winning_chain
+from agents.Group17.windetect import select_best_move
 from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
@@ -81,10 +82,7 @@ class GoodAgent(AgentBase):
         while available_actions:
             action = available_actions.pop()
             state[action.x][action.y] = self.colour if our_turn else self.opp_colour()
-            if has_winning_chain(state, self.colour):
-                return True
-            if has_winning_chain(state, self.opp_colour()):
-                return False
+
             our_turn = not our_turn
 
         # if somehow the whole board gets filled without a win being detected
@@ -185,7 +183,7 @@ class GoodAgent(AgentBase):
             selection_times.append(time() - selection_start_time)
             # Expansion
             expansion_start_time = time()
-            if leaf.visits > 0:
+            if leaf.visits > 0 and leaf.available_actions:
                 self.expansion(leaf)
                 leaf = choice(leaf.children)
             expansion_times.append(time() - expansion_start_time)
@@ -215,21 +213,6 @@ class GoodAgent(AgentBase):
         return node.prev_action
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
-        """The game engine will call this method to request a move from the agent.
-        If the agent is to make the first move, opp_move will be None.
-        If the opponent has made a move, opp_move will contain the opponent's move.
-        If the opponent has made a swap move, opp_move will contain a Move object with x=-1 and y=-1,
-        the game engine will also change your colour to the opponent colour.
-
-        Args:
-            turn (int): The current turn
-            board (Board): The current board state
-            opp_move (Move | None): The opponent's last move
-
-        Returns:
-            Move: The agent's move
-        """
-
         start_time = time()
 
         if opp_move and opp_move != Move(-1, -1):
@@ -240,5 +223,18 @@ class GoodAgent(AgentBase):
             return Move(-1, -1)
 
         move = self.mcts(board, self._choices, start_time)
+        self._choices.remove(move)
+        return move
+
+class AlexAgent(GoodAgent):
+    def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
+        if opp_move and opp_move != Move(-1, -1):
+            self._choices.remove(opp_move)
+
+        # ALWAYS SWAP
+        if turn == 2:
+            return Move(-1, -1)
+
+        move = select_best_move(board, self.colour)
         self._choices.remove(move)
         return move
