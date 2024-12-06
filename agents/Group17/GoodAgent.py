@@ -6,12 +6,13 @@ from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
+from src.Tile import Tile
 
 class Node:
     children: None # set in expansion
     parent: None # never changes
 
-    state: Board # never changes
+    state: list[list[Colour | None]] # never changes
     prev_action: None | Move # never changes
     available_actions: list[Move] # never changes
 
@@ -19,7 +20,7 @@ class Node:
     value: float # increases in backpropagation
     our_turn: bool # never changes
 
-    def __init__(self, state: Board, available_actions: list[Move], our_turn: bool, parent = None, prev_action = None):
+    def __init__(self, state: list[list[Colour | None]], available_actions: list[Move], our_turn: bool, parent = None, prev_action = None):
         self.parent = parent
         self.state = state
         self.available_actions = available_actions
@@ -39,7 +40,7 @@ class GoodAgent(AgentBase):
     _choices: list[Move]
     _board_size: int = 11
     _time_limit: float = 5 # seconds per move
-    _iterations: int = 1000
+    _iterations: int = 3_000
     EXPLORATION_CONSTANT = 2
     _parent_node_visits: int
 
@@ -57,9 +58,9 @@ class GoodAgent(AgentBase):
     def expansion(self, node: Node):
         # expand all children at once
         for action in node.available_actions:
-            new_state: Board = self.copy_board(node.state)
+            new_state = node.state.copy()
             colour = self.colour if node.our_turn else self.opp_colour()
-            new_state.set_tile_colour(action.x, action.y, colour)
+            new_state[action.x][action.y] = colour
             new_available_actions = [a for a in node.available_actions if a != action]
             node.children.append(Node(
                 state=new_state,
@@ -79,14 +80,16 @@ class GoodAgent(AgentBase):
     def simulation(self, node: Node):
         # play until no available actions remain
         available_actions = node.available_actions.copy()
-        state = self.copy_board(node.state)
+        state = node.state.copy()
         our_turn = not node.our_turn
         shuffle(available_actions)
         while available_actions:
             action = available_actions.pop()
-            state.set_tile_colour(action.x, action.y, self.colour if our_turn else self.opp_colour())
+            state[action.x][action.y] = self.colour if our_turn else self.opp_colour()
             our_turn = not our_turn
-        return state.has_ended(self.colour)
+
+        tiles = [[Tile(i, j, state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
+        return self._who_won(tiles)
 
     def backpropagation(self, node: Node, win: bool):
         while node:
@@ -98,18 +101,65 @@ class GoodAgent(AgentBase):
             node = node.parent
         self._parent_node_visits += 1
 
+    def _who_won(self, tiles: list[list[Tile]]) -> bool:
+        """Checks if the game has ended. It will attempt to find a red chain
+        from top to bottom or a blue chain from left to right of the board.
+        """
+
+        if self.colour == Colour.RED:
+            for idx in range(self._board_size):
+                tile = tiles[0][idx]
+                if not tile.is_visited() and tile.colour == Colour.RED and self.DFS_colour(0, idx, tiles):
+                    return True
+        else:
+            for idx in range(self._board_size):
+                tile = tiles[idx][0]
+                if not tile.is_visited() and tile.colour == Colour.BLUE and self.DFS_colour(idx, 0, tiles):
+                    return True
+
+        return False
+
+    def DFS_colour(self, x, y, tiles):
+        """A recursive DFS method that iterates through connected same-colour
+        tiles until it finds a bottom tile (Red) or a right tile (Blue).
+        """
+
+        tiles[x][y].visit()
+
+        # win conditions
+        if self.colour == Colour.RED:
+            if x == self._board_size - 1:
+                return True
+        else:
+            if y == self._board_size - 1:
+                return True
+
+        # visit neighbours
+        for idx in range(Tile.NEIGHBOUR_COUNT):
+            x_n = x + Tile.I_DISPLACEMENTS[idx]
+            y_n = y + Tile.J_DISPLACEMENTS[idx]
+            if (0 <= x_n < self._board_size) and (0 <= y_n < self._board_size):
+                neighbour = tiles[x_n][y_n]
+                if not neighbour.is_visited() and neighbour.colour == self.colour and self.DFS_colour(x_n, y_n, tiles):
+                    # Check if the recursive call found a winning path
+                    return True
+
+        # If no path found from this tile, return False
+        return False
+
     def mcts(self, board, available_actions):
         setup_mcts_start_time = time()
+        state = [[tile.colour for tile in row] for row in board.tiles]
         root = Node(
-            state=board,
+            state=state,
             available_actions=available_actions,
             our_turn=True
         )
         self._parent_node_visits = 0
         # add first layer of children
         for action in available_actions:
-            new_state: Board = self.copy_board(board)
-            new_state.set_tile_colour(action.x, action.y, self.colour)
+            new_state = state.copy()
+            new_state[action.x][action.y] = self.colour
             new_available_actions = [a for a in available_actions if a != action]
             root.children.append(Node(
                 state=new_state,
@@ -119,8 +169,9 @@ class GoodAgent(AgentBase):
                 prev_action=action,
             ))
 
+
         setup_mcts_time = time() - setup_mcts_start_time
-        print(f"Setup MCTS time: {setup_mcts_time}")
+        print(f"Setup MCTS time: {setup_mcts_time:.5f}s")
         iterations = 0
         selection_times = []
         expansion_times = []
