@@ -17,7 +17,7 @@ class Node:
     available_actions: list[Move] # never changes
 
     visits: int # increases in backpropagation
-    value: float # increases in backpropagation
+    value: int # increases in backpropagation
     our_turn: bool # never changes
 
     def __init__(self, state: list[list[Colour | None]], available_actions: list[Move], our_turn: bool, parent = None, prev_action = None):
@@ -39,8 +39,8 @@ class Node:
 class GoodAgent(AgentBase):
     _choices: list[Move]
     _board_size: int = 11
-    _time_limit: float = 5 # seconds per move
-    _iterations: int = 3_000
+    _time_limit: int = 5 # seconds per move
+    _max_iterations: int = 10_000
     EXPLORATION_CONSTANT = 2
     _parent_node_visits: int
 
@@ -147,7 +147,7 @@ class GoodAgent(AgentBase):
         # If no path found from this tile, return False
         return False
 
-    def mcts(self, board, available_actions):
+    def mcts(self, board, available_actions, start_time):
         setup_mcts_start_time = time()
         state = [[tile.colour for tile in row] for row in board.tiles]
         root = Node(
@@ -169,7 +169,6 @@ class GoodAgent(AgentBase):
                 prev_action=action,
             ))
 
-
         setup_mcts_time = time() - setup_mcts_start_time
         print(f"Setup MCTS time: {setup_mcts_time:.5f}s")
         iterations = 0
@@ -177,7 +176,8 @@ class GoodAgent(AgentBase):
         expansion_times = []
         simulation_times = []
         backpropagation_times = []
-        while iterations < self._iterations:
+
+        while iterations < self._max_iterations and time() - start_time < self._time_limit:
             iterations += 1
             # Selection
             selection_start_time = time()
@@ -230,6 +230,8 @@ class GoodAgent(AgentBase):
             Move: The agent's move
         """
 
+        start_time = time()
+
         if opp_move and opp_move != Move(-1, -1):
             self._choices.remove(opp_move)
 
@@ -237,6 +239,6 @@ class GoodAgent(AgentBase):
         if turn == 2:
             return Move(-1, -1)
 
-        move = self.mcts(board, self._choices)
+        move = self.mcts(board, self._choices, start_time)
         self._choices.remove(move)
         return move
