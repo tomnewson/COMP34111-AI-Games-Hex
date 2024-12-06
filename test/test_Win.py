@@ -11,7 +11,7 @@ from agents.Group17.haswin import has_winning_chain
 class TestWin(unittest.TestCase):
     def setUp(self):
         self.board = Board(11)
-        
+
     def test_11x11_with_virtual_connection_and_winning_chain(self):
         board_str = (
         """R 0 0 0 0 0 0 0 R R R
@@ -29,8 +29,8 @@ class TestWin(unittest.TestCase):
         board = Board.from_string(board_str, board_size=11)
         print("####################################################################################")
         # Assert that the board size is 11x11
-
-        x = has_winning_chain(board, Colour.RED)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.RED)
         if x:
             print("WINNER")
         print(x)

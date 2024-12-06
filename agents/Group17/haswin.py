@@ -2,7 +2,7 @@ from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
 
-def has_winning_chain(x: list[list[Colour | None]] | Board, player_colour: Colour) -> bool:
+def has_winning_chain(tiles: list[list[Colour | None]], player_colour: Colour) -> bool:
     """
     Performs a DFS search to determine if there is a winning chain for the given player.
     The chain can be a direct chain of tiles of the same colour or a virtual connection.
@@ -14,7 +14,6 @@ def has_winning_chain(x: list[list[Colour | None]] | Board, player_colour: Colou
     Returns:
         bool: True if there is a winning chain, False otherwise.
     """
-    tiles = [[tile.colour for tile in row] for row in x.tiles] if x is Board else x
     visited = set()
     stack = []
 

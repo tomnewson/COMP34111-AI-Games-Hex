@@ -87,6 +87,7 @@ class GoodAgent(AgentBase):
                 return False
             our_turn = not our_turn
 
+        # if somehow the whole board gets filled without a win being detected
         tiles = [[Tile(i, j, state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
         return self._who_won(tiles)
 
