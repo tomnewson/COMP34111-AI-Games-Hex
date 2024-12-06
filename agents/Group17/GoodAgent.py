@@ -1,5 +1,6 @@
 from random import choice, shuffle
 import math
+from time import time
 
 from src.AgentBase import AgentBase
 from src.Board import Board
@@ -90,14 +91,15 @@ class GoodAgent(AgentBase):
     def backpropagation(self, node: Node, win: bool):
         while node:
             node.visits += 1
-            if win and node.our_turn:
+            if win and not node.our_turn:
                 node.value += 1
-            elif not win and not node.our_turn:
+            elif not win and node.our_turn:
                 node.value += 1
             node = node.parent
         self._parent_node_visits += 1
 
     def mcts(self, board, available_actions):
+        setup_mcts_start_time = time()
         root = Node(
             state=board,
             available_actions=available_actions,
@@ -117,24 +119,48 @@ class GoodAgent(AgentBase):
                 prev_action=action,
             ))
 
+        setup_mcts_time = time() - setup_mcts_start_time
+        print(f"Setup MCTS time: {setup_mcts_time}")
         iterations = 0
+        selection_times = []
+        expansion_times = []
+        simulation_times = []
+        backpropagation_times = []
         while iterations < self._iterations:
             iterations += 1
             # Selection
+            selection_start_time = time()
             leaf = self.selection(root)
+            selection_times.append(time() - selection_start_time)
             # Expansion
+            expansion_start_time = time()
             if leaf.visits > 0:
                 self.expansion(leaf)
                 leaf = choice(leaf.children)
+            expansion_times.append(time() - expansion_start_time)
             # Simulation
+            simulation_start_time = time()
             win = self.simulation(leaf)
+            simulation_times.append(time() - simulation_start_time)
             # Backpropagation
+            backpropagation_start_time = time()
             self.backpropagation(leaf, win)
+            backpropagation_times.append(time() - backpropagation_start_time)
+
+        available_moves_str = '\t'.join(
+            [f'({child.prev_action.x},{child.prev_action.y}): {child.value}/{child.visits}' for child in root.children]
+        )
+        print(f"""Average times after {iterations} iterations:
+                Selection: {(sum(selection_times) / iterations):.5f}s
+                Expansion: {(sum(expansion_times) / iterations):.5f}s
+                Simulation: {(sum(simulation_times) / iterations):.5f}s
+                Backpropagation: {(sum(backpropagation_times) / iterations):.5f}s
+
+                Available Moves:
+                {available_moves_str}
+        """)
 
         node = max(root.children, key=lambda child: child.UCT(0, self._parent_node_visits))
-        print(self._parent_node_visits)
-        print(f"values: {', '.join([f'{child.value}/{child.visits}' for child in root.children])}\n")
-        print(f"values: {', '.join([f'{child.value}/{child.visits}' for child in root.children[0].children])}\n")
         return node.prev_action
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
