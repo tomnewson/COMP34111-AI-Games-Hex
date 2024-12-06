@@ -2,9 +2,7 @@ from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
 
-
-
-def has_winning_chain(B: Board, player_colour: Colour) -> bool:
+def has_winning_chain(x: list[list[Colour | None]] | Board, player_colour: Colour) -> bool:
     """
     Performs a DFS search to determine if there is a winning chain for the given player.
     The chain can be a direct chain of tiles of the same colour or a virtual connection.
@@ -16,6 +14,7 @@ def has_winning_chain(B: Board, player_colour: Colour) -> bool:
     Returns:
         bool: True if there is a winning chain, False otherwise.
     """
+    tiles = [[tile.colour for tile in row] for row in x.tiles] if x is Board else x
     visited = set()
     stack = []
 
@@ -23,12 +22,12 @@ def has_winning_chain(B: Board, player_colour: Colour) -> bool:
     if player_colour == Colour.RED:
         # Start from the top row and aim for the bottom row
         for col in range(0,11):
-            if B.tiles[0][col].colour == player_colour:
+            if tiles[0][col] == player_colour:
                 stack.append((0, col))
     elif player_colour == Colour.BLUE:
         # Start from the left column and aim for the right column
         for row in range(0,11):
-            if B.tiles[row][0].colour == player_colour:
+            if tiles[row][0] == player_colour:
                 stack.append((row, 0))
     else:
         raise ValueError("Invalid player colour.")
@@ -49,29 +48,29 @@ def has_winning_chain(B: Board, player_colour: Colour) -> bool:
             return True  # Reached the right column
 
         # Get all neighbors
-        neighbors = get_neighbors(B, current)
+        neighbors = get_neighbors(current)
 
         for neighbor in neighbors:
             nx, ny = neighbor
 
             # Check direct connection (same colour)
-            if B.tiles[nx][ny].colour == player_colour and neighbor not in visited:
+            if tiles[nx][ny] == player_colour and neighbor not in visited:
                 stack.append(neighbor)
 
             # Check virtual connection
-            elif B.tiles[nx][ny].colour is None and neighbor not in visited:
+            elif tiles[nx][ny] is None and neighbor not in visited:
                 # Look for a virtual connection
-                for intermediate in get_neighbors(B, neighbor):
+                for intermediate in get_neighbors(neighbor):
                     ix, iy = intermediate
                     if (
-                        B.tiles[ix][iy].colour == player_colour
-                        and has_virtual_connection(B, current, intermediate)
+                        tiles[ix][iy] == player_colour
+                        and has_virtual_connection(tiles, current, intermediate)
                     ):
                         stack.append(neighbor)
     return False
 
 
-def get_neighbors(B: Board, node: tuple[int, int]) -> list[tuple[int, int]]:
+def get_neighbors(node: tuple[int, int]) -> list[tuple[int, int]]:
     """
     Returns a list of valid neighboring nodes for a given node.
     """
@@ -84,13 +83,13 @@ def get_neighbors(B: Board, node: tuple[int, int]) -> list[tuple[int, int]]:
 
     for dx, dy in neighbor_offsets:
         nx, ny = x + dx, y + dy
-        if is_within_bounds(B, (nx, ny)):  # Ensure the neighbor is within bounds
+        if is_within_bounds((nx, ny)):  # Ensure the neighbor is within bounds
             neighbors.append((nx, ny))
 
     return neighbors
 
 
-def is_within_bounds(B: Board, node: tuple[int, int]) -> bool:
+def is_within_bounds(node: tuple[int, int]) -> bool:
     """
     Checks if a node is within the bounds of the board.
     """
@@ -98,7 +97,7 @@ def is_within_bounds(B: Board, node: tuple[int, int]) -> bool:
     return 0 <= x < 11 and 0 <= y < 11
 
 
-def has_virtual_connection(B: Board, n1: tuple[int, int], n2: tuple[int, int]) -> bool:
+def has_virtual_connection(tiles: list[list[Colour | None]], n1: tuple[int, int], n2: tuple[int, int]) -> bool:
     """
     Determines if there is a virtual connection between two nodes (n1 and n2) on the board.
     A virtual connection exists if:
@@ -117,23 +116,23 @@ def has_virtual_connection(B: Board, n1: tuple[int, int], n2: tuple[int, int]) -
     x2, y2 = n2
 
     # Check if n1 and n2 are the same colour
-    if B.tiles[x1][y1].colour != B.tiles[x2][y2].colour:
+    if tiles[x1][y1] != tiles[x2][y2]:
         return False
 
     # Both tiles must have the same colour
-    if B.tiles[x1][y1].colour is None:
+    if tiles[x1][y1] is None:
         return False
 
     # Find the shared neighbors of n1 and n2
-    neighbors_n1 = get_neighbors(B, n1)
-    neighbors_n2 = get_neighbors(B, n2)
+    neighbors_n1 = get_neighbors(n1)
+    neighbors_n2 = get_neighbors(n2)
 
     # Check for two distinct unoccupied connecting cells
     connecting_cells = []
     for neighbor in neighbors_n1:
         if neighbor in neighbors_n2:
             nx, ny = neighbor
-            if B.tiles[nx][ny].colour is None:  # Cell is unoccupied
+            if tiles[nx][ny] is None:  # Cell is unoccupied
                 connecting_cells.append(neighbor)
 
     # A virtual connection exists if there are exactly two unoccupied connecting cells

@@ -1,12 +1,14 @@
 from random import choice, shuffle
-import math
 from time import time
+import math
 
+from agents.Group17.haswin import has_winning_chain
 from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
 from src.Tile import Tile
+
 
 class Node:
     children: None # set in expansion
@@ -70,13 +72,6 @@ class GoodAgent(AgentBase):
                 prev_action=action,
             ))
 
-    def copy_board(self, board: Board):
-        new_board = Board(board_size=self._board_size)
-        for i in range(self._board_size):
-            for j in range(self._board_size):
-                new_board.set_tile_colour(i, j, board.tiles[i][j].colour)
-        return new_board
-
     def simulation(self, node: Node):
         # play until no available actions remain
         available_actions = node.available_actions.copy()
@@ -86,6 +81,10 @@ class GoodAgent(AgentBase):
         while available_actions:
             action = available_actions.pop()
             state[action.x][action.y] = self.colour if our_turn else self.opp_colour()
+            if has_winning_chain(state, self.colour):
+                return True
+            if has_winning_chain(state, self.opp_colour()):
+                return False
             our_turn = not our_turn
 
         tiles = [[Tile(i, j, state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
