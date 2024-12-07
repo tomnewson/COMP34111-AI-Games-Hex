@@ -81,8 +81,6 @@ class GoodAgent(AgentBase):
         while available_actions:
             action = available_actions.pop()
             state[action.x][action.y] = self.colour if our_turn else self.opp_colour()
-            if has_winning_chain(state, self.colour):
-                return True
             our_turn = not our_turn
 
         # if somehow the whole board gets filled without a win being detected
@@ -227,6 +225,7 @@ class GoodAgent(AgentBase):
         if not self.winning_chain:
             self.winning_chain = has_winning_chain(state, self.colour)
         if self.winning_chain:
+            print("winning chain: ", self.winning_chain)
             for move in self.winning_chain:
                 real_move = Move(move[0] - 1, move[1])
                 if real_move in self._choices:
