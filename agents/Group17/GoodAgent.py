@@ -215,12 +215,19 @@ class GoodAgent(AgentBase):
         if not self.winning_chain:
             self.winning_chain = has_winning_chain(state, self.colour)
         if self.winning_chain:
-            print("winning chain: ", self.winning_chain)
-            for move in self.winning_chain:
-                if Move(move[0], move[1]) in self._choices:
-                    self._choices.remove(move)
-                    print(f"winning move: {move}")
-                    return move
+            print(f"winning chain: {self.winning_chain}")
+            virtuals = filter(lambda move: state[move[0], move[1]] != self.colour, self.winning_chain)
+            for i in range(len(virtuals)):
+                mx, my = virtuals[i]
+                if state[mx][my] == self.opp_colour():
+                    response = virtuals[i+1] if i % 2 == 0 else virtuals[i-1]
+                    response = Move(response[0], response[1])
+                    self._choices.remove(response)
+                    return response
+            mx, my = virtuals[0] # if there are no virtuals we would have already won!
+            move = Move(mx, my)
+            self._choices.remove(move)
+            return move
 
         move = self.mcts(state, self._choices, start_time)
         self._choices.remove(move)
