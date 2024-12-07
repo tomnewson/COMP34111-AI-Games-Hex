@@ -43,10 +43,12 @@ def has_winning_chain(tiles: list[list[Colour | None]], player_colour: Colour) -
         # Check if the current tile meets the win condition
         if player_colour == Colour.RED and x == 11 - 1:
             #print("RED WIN")
-            return True  # Reached the bottom row
+            stack.append((current[0] + 1, current[1]))
+            return stack  # Reached the bottom row
         if player_colour == Colour.BLUE and y == 11 - 1:
             #print("BLUE WIN")
-            return True  # Reached the right column
+            stack.append((current[0] + 1, current[1] + 1))
+            return stack  # Reached the right column
 
         # Get all neighbors
         neighbors = get_neighbors(current)
@@ -68,7 +70,7 @@ def has_winning_chain(tiles: list[list[Colour | None]], player_colour: Colour) -
                         and has_virtual_connection(tiles, current, intermediate)
                     ):
                         stack.append(neighbor)
-    return False
+    return None
 
 
 def get_neighbors(node: tuple[int, int]) -> list[tuple[int, int]]:

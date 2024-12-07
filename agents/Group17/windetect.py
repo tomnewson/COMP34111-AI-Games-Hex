@@ -24,13 +24,16 @@ def winvalue(B: Board, player: Colour):
     tiles = [[tile.colour for tile in row] for row in B.tiles]
     # Check if the current player has a winning chain
     if has_winning_chain(tiles, player):
-        print("PLAYER WIN")
+        # print(player)
+        # print(B.print_board())
+        # raise Exception("Player has a winning chain")
+        # print("PLAYER WIN")
         return (+1, set())
 
     opponent = get_opponent(player)
     # Check if the opponent has a winning chain
     if has_winning_chain(tiles, opponent):
-        print("OPPONENT WIN")
+        # print("OPPONENT WIN")
         return (-1, set())
 
     # Initialize W (the win-set) and M (the must-play cells)
@@ -41,7 +44,7 @@ def winvalue(B: Board, player: Colour):
     loop = 0
     while M:
         loop += 1
-        print("loop" + str(loop))
+        # print("loop" + str(loop))
         cell = M.pop()
 
         B_next = copy.deepcopy(B)

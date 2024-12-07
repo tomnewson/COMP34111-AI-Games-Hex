@@ -12,23 +12,21 @@ from src.Tile import Tile
 
 
 class Node:
-    children: None # set in expansion
+    children = None # set in expansion
     parent: None # never changes
 
     state: list[list[Colour | None]] # never changes
     prev_action: None | Move # never changes
     available_actions: list[Move] # never changes
 
-    visits: int # increases in backpropagation
-    value: int # increases in backpropagation
+    visits: int = 0 # increases in backpropagation
+    value: int = 0# increases in backpropagation
     our_turn: bool # never changes
 
     def __init__(self, state: list[list[Colour | None]], available_actions: list[Move], our_turn: bool, parent = None, prev_action = None):
         self.parent = parent
         self.state = state
         self.available_actions = available_actions
-        self.visits = 0
-        self.value = 0
         self.our_turn = our_turn
         self.prev_action = prev_action
         self.children = []
@@ -46,6 +44,7 @@ class GoodAgent(AgentBase):
     _max_iterations: int = 10_000
     EXPLORATION_CONSTANT = 2
     _parent_node_visits: int
+    winning_chain = None
 
     def __init__(self, colour: Colour):
         super().__init__(colour)
@@ -61,7 +60,7 @@ class GoodAgent(AgentBase):
     def expansion(self, node: Node):
         # expand all children at once
         for action in node.available_actions:
-            new_state = node.state.copy()
+            new_state = self.copy_state(node.state)
             colour = self.colour if node.our_turn else self.opp_colour()
             new_state[action.x][action.y] = colour
             new_available_actions = [a for a in node.available_actions if a != action]
@@ -76,18 +75,19 @@ class GoodAgent(AgentBase):
     def simulation(self, node: Node):
         # play until no available actions remain
         available_actions = node.available_actions.copy()
-        state = node.state.copy()
+        state = self.copy_state(node.state)
         our_turn = not node.our_turn
         shuffle(available_actions)
         while available_actions:
             action = available_actions.pop()
             state[action.x][action.y] = self.colour if our_turn else self.opp_colour()
-
+            if has_winning_chain(state, self.colour):
+                return True
             our_turn = not our_turn
 
         # if somehow the whole board gets filled without a win being detected
         tiles = [[Tile(i, j, state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
-        return self._who_won(tiles)
+        return self.did_i_win(tiles)
 
     def backpropagation(self, node: Node, win: bool):
         while node:
@@ -99,8 +99,8 @@ class GoodAgent(AgentBase):
             node = node.parent
         self._parent_node_visits += 1
 
-    def _who_won(self, tiles: list[list[Tile]]) -> bool:
-        """Checks if the game has ended. It will attempt to find a red chain
+    def did_i_win(self, tiles: list[list[Tile]]) -> bool:
+        """Copied from Board - Checks if the game has ended. It will attempt to find a red chain
         from top to bottom or a blue chain from left to right of the board.
         """
 
@@ -118,7 +118,7 @@ class GoodAgent(AgentBase):
         return False
 
     def DFS_colour(self, x, y, tiles):
-        """A recursive DFS method that iterates through connected same-colour
+        """Copied from Board - A recursive DFS method that iterates through connected same-colour
         tiles until it finds a bottom tile (Red) or a right tile (Blue).
         """
 
@@ -145,9 +145,11 @@ class GoodAgent(AgentBase):
         # If no path found from this tile, return False
         return False
 
-    def mcts(self, board, available_actions, start_time):
-        setup_mcts_start_time = time()
-        state = [[tile.colour for tile in row] for row in board.tiles]
+    def copy_state(self, state):
+        """rows are mutable, so we need a deep copy"""
+        return [list(row) for row in state]
+
+    def mcts(self, state, available_actions, start_time):
         root = Node(
             state=state,
             available_actions=available_actions,
@@ -156,7 +158,7 @@ class GoodAgent(AgentBase):
         self._parent_node_visits = 0
         # add first layer of children
         for action in available_actions:
-            new_state = state.copy()
+            new_state = self.copy_state(state)
             new_state[action.x][action.y] = self.colour
             new_available_actions = [a for a in available_actions if a != action]
             root.children.append(Node(
@@ -166,15 +168,12 @@ class GoodAgent(AgentBase):
                 parent=root,
                 prev_action=action,
             ))
-
-        setup_mcts_time = time() - setup_mcts_start_time
-        print(f"Setup MCTS time: {setup_mcts_time:.5f}s")
+        print(f"Setup time: {time() - start_time:.5f}s")
         iterations = 0
         selection_times = []
         expansion_times = []
         simulation_times = []
         backpropagation_times = []
-
         while iterations < self._max_iterations and time() - start_time < self._time_limit:
             iterations += 1
             # Selection
@@ -222,7 +221,20 @@ class GoodAgent(AgentBase):
         if turn == 2:
             return Move(-1, -1)
 
-        move = self.mcts(board, self._choices, start_time)
+        state = [[tile.colour for tile in row] for row in board.tiles]
+
+        # check for winning chains
+        if not self.winning_chain:
+            self.winning_chain = has_winning_chain(state, self.colour)
+        if self.winning_chain:
+            for move in self.winning_chain:
+                real_move = Move(move[0] - 1, move[1])
+                if real_move in self._choices:
+                    self._choices.remove(real_move)
+                    print(f"winning move: {real_move}")
+                    return real_move
+
+        move = self.mcts(state, self._choices, start_time)
         self._choices.remove(move)
         return move
 
