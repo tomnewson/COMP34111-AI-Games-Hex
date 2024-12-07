@@ -20,7 +20,7 @@ class Node:
     available_actions: list[Move] # never changes
 
     visits: int = 0 # increases in backpropagation
-    value: int = 0# increases in backpropagation
+    value: int = 0 # increases in backpropagation
     our_turn: bool # never changes
 
     def __init__(self, state: list[list[Colour | None]], available_actions: list[Move], our_turn: bool, parent = None, prev_action = None):
@@ -41,7 +41,7 @@ class GoodAgent(AgentBase):
     _choices: list[Move]
     _board_size: int = 11
     _time_limit: int = 5 # seconds per move
-    _max_iterations: int = 10_000
+    _max_iterations: int = 20_000
     EXPLORATION_CONSTANT = 2
     _parent_node_visits: int
     winning_chain = None
@@ -199,6 +199,11 @@ class GoodAgent(AgentBase):
         node = max(root.children, key=lambda child: child.UCT(0, self._parent_node_visits))
         return node.prev_action
 
+    def end_turn(self, move: Move):
+        """remove from choices and return move"""
+        self._choices.remove(move)
+        return move
+
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
         start_time = time()
 
@@ -211,27 +216,30 @@ class GoodAgent(AgentBase):
 
         state = [[tile.colour for tile in row] for row in board.tiles]
 
+        # manual check for immediate win
+        for move in self._choices:
+            new_state = self.copy_state(state)
+            new_state[move.x][move.y] = self.colour
+            tiles = [[Tile(i, j, new_state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
+            if self.did_i_win(tiles):
+                print(f"immediate win: {move}")
+                return self.end_turn(move)
+
         # check for winning chains
         if not self.winning_chain:
             self.winning_chain = has_winning_chain(state, self.colour)
         if self.winning_chain:
             print(f"winning chain: {self.winning_chain}")
-            virtuals = filter(lambda move: state[move[0], move[1]] != self.colour, self.winning_chain)
-            for i in range(len(virtuals)):
-                mx, my = virtuals[i]
+            virtuals = filter(lambda move: state[move[0]][move[1]] != self.colour, self.winning_chain)
+            for i, mx, my in enumerate(virtuals):
                 if state[mx][my] == self.opp_colour():
                     response = virtuals[i+1] if i % 2 == 0 else virtuals[i-1]
-                    response = Move(response[0], response[1])
-                    self._choices.remove(response)
-                    return response
+                    return self.end_turn(Move(response[0], response[1]))
             mx, my = virtuals[0] # if there are no virtuals we would have already won!
-            move = Move(mx, my)
-            self._choices.remove(move)
-            return move
+            return self.end_turn(Move(mx, my))
 
         move = self.mcts(state, self._choices, start_time)
-        self._choices.remove(move)
-        return move
+        return self.end_turn(move)
 
 class AlexAgent(GoodAgent):
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
