@@ -154,19 +154,9 @@ class GoodAgent(AgentBase):
             our_turn=True
         )
         self._parent_node_visits = 0
-        # add first layer of children
-        for action in available_actions:
-            new_state = self.copy_state(state)
-            new_state[action.x][action.y] = self.colour
-            new_available_actions = [a for a in available_actions if a != action]
-            root.children.append(Node(
-                state=new_state,
-                available_actions=new_available_actions,
-                our_turn=False,
-                parent=root,
-                prev_action=action,
-            ))
+        self.expansion(root)
         print(f"Setup time: {time() - start_time:.5f}s")
+
         iterations = 0
         selection_times = []
         expansion_times = []
@@ -227,11 +217,10 @@ class GoodAgent(AgentBase):
         if self.winning_chain:
             print("winning chain: ", self.winning_chain)
             for move in self.winning_chain:
-                real_move = Move(move[0] - 1, move[1])
-                if real_move in self._choices:
-                    self._choices.remove(real_move)
-                    print(f"winning move: {real_move}")
-                    return real_move
+                if Move(move[0], move[1]) in self._choices:
+                    self._choices.remove(move)
+                    print(f"winning move: {move}")
+                    return move
 
         move = self.mcts(state, self._choices, start_time)
         self._choices.remove(move)

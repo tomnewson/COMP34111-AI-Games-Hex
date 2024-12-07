@@ -1,37 +1,32 @@
-from src.Board import Board
 from src.Colour import Colour
-from src.Move import Move
 
-def has_winning_chain(tiles: list[list[Colour | None]], player_colour: Colour) -> bool:
+def has_winning_chain(tiles: list[list[Colour | None]], player_colour: Colour) -> list[tuple[int,int]] | None:
     """
     Performs a DFS search to determine if there is a winning chain for the given player.
     The chain can be a direct chain of tiles of the same colour or a virtual connection.
 
-    Args:
-        B: Board object representing the current Hex board state.
-        player_colour: Colour of the player to check for a winning chain.
-
     Returns:
-        bool: True if there is a winning chain, False otherwise.
+        list of (x,y) positions forming the winning chain if found, otherwise None.
     """
     visited = set()
     stack = []
+    parent = {}  # Map each node to its parent for path reconstruction
 
-    # Determine starting edge based on player colour
+    # Determine starting positions based on player colour
     if player_colour == Colour.RED:
         # Start from the top row and aim for the bottom row
-        for col in range(0,11):
-            if tiles[0][col] == player_colour:
-                stack.append((0, col))
+        starts = [(0, c) for c in range(11) if tiles[0][c] == player_colour]
     elif player_colour == Colour.BLUE:
         # Start from the left column and aim for the right column
-        for row in range(0,11):
-            if tiles[row][0] == player_colour:
-                stack.append((row, 0))
+        starts = [(r, 0) for r in range(11) if tiles[r][0] == player_colour]
     else:
         raise ValueError("Invalid player colour.")
 
-    # Perform DFS
+    # Initialize the stack
+    for s in starts:
+        stack.append(s)
+        parent[s] = None
+
     while stack:
         current = stack.pop()
         if current in visited:
@@ -41,55 +36,57 @@ def has_winning_chain(tiles: list[list[Colour | None]], player_colour: Colour) -
         x, y = current
 
         # Check if the current tile meets the win condition
-        if player_colour == Colour.RED and x == 11 - 1:
-            #print("RED WIN")
-            stack.append((current[0] + 1, current[1]))
-            return stack  # Reached the bottom row
-        if player_colour == Colour.BLUE and y == 11 - 1:
-            #print("BLUE WIN")
-            stack.append((current[0] + 1, current[1] + 1))
-            return stack  # Reached the right column
+        if player_colour == Colour.RED and x == 10:  # last row for RED
+            # We've reached the bottom. Reconstruct path and return it.
+            return reconstruct_path(parent, current)
 
-        # Get all neighbors
-        neighbors = get_neighbors(current)
+        if player_colour == Colour.BLUE and y == 10: # last column for BLUE
+            # We've reached the right side. Reconstruct path and return it.
+            return reconstruct_path(parent, current)
 
-        for neighbor in neighbors:
-            nx, ny = neighbor
+        # Explore neighbours
+        for neighbour in get_neighbours(current):
+            nx, ny = neighbour
 
-            # Check direct connection (same colour)
-            if tiles[nx][ny] == player_colour and neighbor not in visited:
-                stack.append(neighbor)
+            if neighbour in visited:
+                continue
 
-            # Check virtual connection
-            elif tiles[nx][ny] is None and neighbor not in visited:
-                # Look for a virtual connection
-                for intermediate in get_neighbors(neighbor):
+            # Direct connection (same colour)
+            if tiles[nx][ny] == player_colour:
+                parent[neighbour] = current
+                stack.append(neighbour)
+
+            # Virtual connection: Check if this empty node could lead to a path
+            elif tiles[nx][ny] is None:
+                # Check if there's a tile of player_colour adjacent to this empty cell
+                # that forms a valid virtual connection
+                for intermediate in get_neighbours(neighbour):
                     ix, iy = intermediate
-                    if (
-                        tiles[ix][iy] == player_colour
-                        and has_virtual_connection(tiles, current, intermediate)
-                    ):
-                        stack.append(neighbor)
+                    if tiles[ix][iy] == player_colour and has_virtual_connection(tiles, current, intermediate):
+                        parent[neighbour] = current
+                        stack.append(neighbour)
+                        break
+
     return None
 
 
-def get_neighbors(node: tuple[int, int]) -> list[tuple[int, int]]:
+def get_neighbours(node: tuple[int, int]) -> list[tuple[int, int]]:
     """
-    Returns a list of valid neighboring nodes for a given node.
+    Returns a list of valid neighbouring nodes for a given node.
     """
     x, y = node
-    neighbor_offsets = [
-        (-1, 0), (1, 0), (0, -1), (0, 1),  # Standard hex neighbors
+    neighbour_offsets = [
+        (-1, 0), (1, 0), (0, -1), (0, 1),
         (-1, 1), (1, -1),
     ]
-    neighbors = []
+    neighbours = []
 
-    for dx, dy in neighbor_offsets:
+    for dx, dy in neighbour_offsets:
         nx, ny = x + dx, y + dy
-        if is_within_bounds((nx, ny)):  # Ensure the neighbor is within bounds
-            neighbors.append((nx, ny))
+        if is_within_bounds((nx, ny)):
+            neighbours.append((nx, ny))
 
-    return neighbors
+    return neighbours
 
 
 def is_within_bounds(node: tuple[int, int]) -> bool:
@@ -100,44 +97,40 @@ def is_within_bounds(node: tuple[int, int]) -> bool:
     return 0 <= x < 11 and 0 <= y < 11
 
 
-def has_virtual_connection(tiles: list[list[Colour | None]], n1: tuple[int, int], n2: tuple[int, int]) -> bool:
+def has_virtual_connection(tiles: list[list[Colour | None]], n1: tuple[int, int], n2: tuple[int, int]) -> list[tuple[int,int]] | None:
     """
     Determines if there is a virtual connection between two nodes (n1 and n2) on the board.
-    A virtual connection exists if:
-    1. n1 and n2 are the same colour.
-    2. There are two distinct cells connecting n1 and n2, and both are unoccupied.
+    A virtual connection is simplified here as having the same colour and having exactly two shared empty neighbours.
 
-    Args:
-        B: Board object representing the Hex board.
-        n1: Tuple representing the coordinates of the first node (row, col).
-        n2: Tuple representing the coordinates of the second node (row, col).
-
-    Returns:
-        bool: True if there is a virtual connection, False otherwise.
+    Adjust logic if this is too permissive or causing false positives.
     """
     x1, y1 = n1
     x2, y2 = n2
 
-    # Check if n1 and n2 are the same colour
+    # Both must be same colour and not None
+    if tiles[x1][y1] is None or tiles[x2][y2] is None:
+        return False
     if tiles[x1][y1] != tiles[x2][y2]:
         return False
 
-    # Both tiles must have the same colour
-    if tiles[x1][y1] is None:
-        return False
+    neighbours_n1 = set(get_neighbours(n1))
+    neighbours_n2 = set(get_neighbours(n2))
+    shared_neighbours = neighbours_n1.intersection(neighbours_n2)
 
-    # Find the shared neighbors of n1 and n2
-    neighbors_n1 = get_neighbors(n1)
-    neighbors_n2 = get_neighbors(n2)
+    # Check for exactly two distinct unoccupied connecting cells
+    connecting_cells = [cell for cell in shared_neighbours if tiles[cell[0]][cell[1]] is None]
 
-    # Check for two distinct unoccupied connecting cells
-    connecting_cells = []
-    for neighbor in neighbors_n1:
-        if neighbor in neighbors_n2:
-            nx, ny = neighbor
-            if tiles[nx][ny] is None:  # Cell is unoccupied
-                connecting_cells.append(neighbor)
-
-    # A virtual connection exists if there are exactly two unoccupied connecting cells
     return len(connecting_cells) == 2
 
+
+def reconstruct_path(parent: dict, end_node: tuple[int,int]) -> list[tuple[int,int]]:
+    """
+    Reconstructs the path from the start node to the end node using the parent dictionary.
+    """
+    path = []
+    current = end_node
+    while current is not None:
+        path.append(current)
+        current = parent[current]
+    path.reverse()
+    return path

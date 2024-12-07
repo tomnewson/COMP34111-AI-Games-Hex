@@ -100,7 +100,6 @@ class TestWin(unittest.TestCase):
         x = has_winning_chain(tiles, Colour.RED)
         self.assertFalse(x)
 
-    @unittest.skip("Not implemented")
     def test_top_virtual(self):
         board_str = (
         """0 0 0 0 0 0 0 0 0 0 0
@@ -143,17 +142,17 @@ class TestWin(unittest.TestCase):
 
     def test_blue_virtual(self):
         board_str = (
-        """B B B 0 0 0 R 0 0 0 0
-        0 0 0 B B B B B B B B
-        0 0 0 0 0 0 0 0 R 0 0
-        0 0 0 0 0 0 R 0 0 0 0
-        0 0 0 0 R 0 0 0 0 0 0
-        0 0 R 0 0 0 0 0 0 0 0
-        R 0 0 0 0 0 0 0 0 0 0
-        0 R 0 0 0 0 0 0 0 0 0
-        0 0 R 0 0 0 0 0 0 0 0
-        0 0 0 R R R R R R 0 0
-        0 0 B B B 0 0 0 0 0 0 """
+        """ B B B 0 0 0 R 0 0 0 0
+            0 0 0 B B B B B B B B
+            0 0 0 0 0 0 0 0 R 0 0
+            0 0 0 0 0 0 R 0 0 0 0
+            0 0 0 0 R 0 0 0 0 0 0
+            0 0 R 0 0 0 0 0 0 0 0
+            R 0 0 0 0 0 0 0 0 0 0
+            0 R 0 0 0 0 0 0 0 0 0
+            0 0 R 0 0 0 0 0 0 0 0
+            0 0 0 R R R R R R 0 0
+            0 0 B B B 0 0 0 0 0 0 """
         )
         board = Board.from_string(board_str, board_size=11)
         self.assertEqual(board.size, 11)
@@ -162,6 +161,131 @@ class TestWin(unittest.TestCase):
         print(x)
         self.assertTrue(x)
 
+    def test_blue_right_finish(self):
+        board_str = (
+        """ R R R R R R R R R R R
+            R R R R R B R B R R 0
+            B 0 0 0 0 B 0 0 0 0 0
+            0 0 0 0 0 B B 0 0 0 0
+            0 0 0 0 0 B B 0 0 B 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 B B B B B B 0
+            0 0 0 B R 0 0 0 0 0 0
+            B B B 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.BLUE)
+        print(x)
+        self.assertTrue(x)
+
+    def test_blue_left_finish(self):
+        board_str = (
+        """ R R R R R R R R R R R
+            R R R R R B R B R R 0
+            B 0 0 0 0 B 0 0 0 0 0
+            0 0 0 0 0 B B 0 0 0 0
+            0 0 0 0 0 B B 0 0 B 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 B B B B B B B
+            0 0 0 B R 0 0 0 0 0 0
+            0 B B 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.BLUE)
+        print(x)
+        self.assertTrue(x)
+
+    def test_red_full(self):
+        board_str = (
+        """ R R R R R R R R R R R
+            R R R R R B R B R R 0
+            B 0 0 0 R B 0 0 0 0 0
+            0 0 0 0 R B B 0 0 0 0
+            0 0 0 0 R B B 0 0 B 0
+            0 0 0 0 R 0 0 0 0 0 0
+            0 0 0 0 R B B B B B B
+            0 0 0 B R 0 0 0 0 0 0
+            0 B B 0 R 0 0 0 0 0 0
+            0 0 0 0 R 0 0 0 0 0 0
+            0 0 0 0 R 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.RED)
+        print(x)
+        self.assertTrue(x)
+
+    def test_blue_full(self):
+        board_str = (
+        """ R R R R R R R R R R R
+            R R R R R B R B R R 0
+            B 0 0 0 R B 0 0 0 0 0
+            0 0 0 0 R B B 0 0 0 0
+            0 0 0 0 R B B 0 0 B 0
+            0 0 0 0 R 0 0 0 0 0 0
+            B B B B B B B B B B B
+            0 0 0 B R 0 0 0 0 0 0
+            0 B B 0 R 0 0 0 0 0 0
+            0 0 0 0 R 0 0 0 0 0 0
+            0 0 0 0 R 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.BLUE)
+        print(x)
+        self.assertTrue(x)
+
+    def test_blue_no_winning_chain(self):
+        board_str = (
+            """ R R R R R R R R R R R
+                  R R R R R B R R R B R
+                    R R R R B R R B B R R
+                      B B B R R B B B B R B
+                        0 B 0 B B B B B B B 0
+                          0 0 0 0 B 0 B B B B 0
+                            0 0 R B 0 0 0 0 0 0 0
+                              0 0 B 0 0 0 0 0 0 0 0
+                                0 0 0 B 0 0 0 0 0 0 0
+                                  0 0 0 0 0 0 0 0 0 0 0
+                                    B 0 0 B 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.BLUE)
+        print(x)
+        self.assertFalse(x)
+
+    def test_blue_no_winning_chain2(self):
+        board_str = (
+            """ R R R R R R R R R R R
+                  R R R R R B R R R B R
+                    R R R R B R 0 B B 0 0
+                      B B B 0 0 0 B 0 B 0 B
+                        0 B 0 0 B B 0 B 0 B 0
+                          0 0 0 0 B 0 0 B B B 0
+                0 0 R B 0 0 0 0 0 0 0
+                0 0 B 0 0 0 0 0 0 0 0
+                0 0 0 B 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                B 0 0 B 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.BLUE)
+        print(x)
+        self.assertFalse(x)
 
 if __name__ == "__main__":
     unittest.main()
