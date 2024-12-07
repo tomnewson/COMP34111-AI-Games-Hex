@@ -201,6 +201,13 @@ class GoodAgent(AgentBase):
 
     def end_turn(self, move: Move):
         """remove from choices and return move"""
+        if move in self._choices:
+            self._choices.remove(move)
+            return move
+
+        print(f"SOMETHING WENT WRONG, INVALID MOVE: {move}")
+        print("MAKING RANDOM MOVE TO AVOID CRASH")
+        move = choice(self._choices)
         self._choices.remove(move)
         return move
 
@@ -226,17 +233,17 @@ class GoodAgent(AgentBase):
                 return self.end_turn(move)
 
         # check for winning chains
-        # if not self.winning_chain:
-        #     self.winning_chain = has_winning_chain(state, self.colour)
-        # if self.winning_chain:
-        #     virtuals = [move for move in self.winning_chain if state[move[0]][move[1]] != self.colour]
-        #     print(f"virtual connections in winning chain: {virtuals}")
-        #     for i, move in enumerate(virtuals):
-        #         if state[move[0]][move[1]] == self.opp_colour():
-        #             response = virtuals[i+1] if i % 2 == 0 else virtuals[i-1]
-        #             return self.end_turn(Move(response[0], response[1]))
-        #     mx, my = virtuals[0] # if there are no virtuals we would have already won!
-        #     return self.end_turn(Move(mx, my))
+        if not self.winning_chain:
+            self.winning_chain = has_winning_chain(state, self.colour)
+        if self.winning_chain:
+            virtuals = [move for move in self.winning_chain if state[move[0]][move[1]] != self.colour]
+            print(f"virtual connections in winning chain: {virtuals}")
+            for i, move in enumerate(virtuals):
+                if state[move[0]][move[1]] == self.opp_colour():
+                    response = virtuals[i+1] if i % 2 == 0 else virtuals[i-1]
+                    return self.end_turn(Move(response[0], response[1]))
+            mx, my = virtuals[0] # if there are no virtuals we would have already won!
+            return self.end_turn(Move(mx, my))
 
         move = self.mcts(state, self._choices, start_time)
         return self.end_turn(move)
