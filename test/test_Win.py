@@ -179,7 +179,6 @@ class TestWin(unittest.TestCase):
         self.assertEqual(board.size, 11)
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         x = has_winning_chain(tiles, Colour.BLUE)
-        print(x)
         self.assertTrue(x)
 
     def test_blue_left_finish(self):
@@ -200,7 +199,6 @@ class TestWin(unittest.TestCase):
         self.assertEqual(board.size, 11)
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         x = has_winning_chain(tiles, Colour.BLUE)
-        print(x)
         self.assertTrue(x)
 
     def test_red_full(self):
@@ -221,7 +219,6 @@ class TestWin(unittest.TestCase):
         self.assertEqual(board.size, 11)
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         x = has_winning_chain(tiles, Colour.RED)
-        print(x)
         self.assertTrue(x)
 
     def test_blue_full(self):
@@ -242,7 +239,6 @@ class TestWin(unittest.TestCase):
         self.assertEqual(board.size, 11)
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         x = has_winning_chain(tiles, Colour.BLUE)
-        print(x)
         self.assertTrue(x)
 
     def test_blue_no_winning_chain(self):
@@ -263,7 +259,6 @@ class TestWin(unittest.TestCase):
         self.assertEqual(board.size, 11)
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         x = has_winning_chain(tiles, Colour.BLUE)
-        print(x)
         self.assertFalse(x)
 
     def test_blue_no_winning_chain2(self):
@@ -284,8 +279,29 @@ class TestWin(unittest.TestCase):
         self.assertEqual(board.size, 11)
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         x = has_winning_chain(tiles, Colour.BLUE)
-        print(x)
         self.assertFalse(x)
+
+    def test_blue_no_winning_chain3(self):
+        board_str = (
+            """R R R R R R R R R R R
+ R R R R R R R B B B R
+  R R R B R R R R R B R
+   R R B 0 0 R B 0 0 0 0
+    B 0 0 B B B 0 0 B 0 0
+     0 0 0 B 0 0 B B 0 0 B
+      0 0 B 0 B 0 0 B 0 0 0
+       0 0 0 0 B B B B B 0 0
+        0 0 0 0 0 0 0 0 0 B 0
+         0 B 0 0 0 0 0 0 0 0 B
+          0 B 0 B 0 0 0 B 0 0 0 """
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        x = has_winning_chain(tiles, Colour.BLUE)
+        self.assertFalse(x)
+
+
 
 if __name__ == "__main__":
     unittest.main()

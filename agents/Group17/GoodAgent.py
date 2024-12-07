@@ -229,8 +229,8 @@ class GoodAgent(AgentBase):
         if not self.winning_chain:
             self.winning_chain = has_winning_chain(state, self.colour)
         if self.winning_chain:
-            print(f"winning chain: {self.winning_chain}")
             virtuals = [move for move in self.winning_chain if state[move[0]][move[1]] != self.colour]
+            print(f"virtual connections in winning chain: {virtuals}")
             for i, move in enumerate(virtuals):
                 if state[move[0]][move[1]] == self.opp_colour():
                     response = virtuals[i+1] if i % 2 == 0 else virtuals[i-1]
