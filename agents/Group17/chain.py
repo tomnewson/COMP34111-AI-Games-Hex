@@ -1,8 +1,8 @@
 from src.Colour import Colour
 
 class Cell:
-    parent: None 
-    colour: list[list[Colour | None]] 
+    parent: None
+    colour: list[list[Colour | None]]
     x: int
     y: int
     virtual_parents: tuple[tuple[int, int], tuple[int, int]]
@@ -41,7 +41,7 @@ class ChainFinder:
         """
         neighbour_offsets = [
             (-1, 0), (-1, 1),(0, 1),(1, 0), (1, -1),(0, -1),
-             
+
         ]
 
         neighbours = []
@@ -52,7 +52,7 @@ class ChainFinder:
                 neighbours.append(self.tiles[nx][ny])
 
         return neighbours
-    
+
     def reconstruct_virtual_pairs(self, leaf):
         virtual_pairs = []
         while leaf:
@@ -62,7 +62,7 @@ class ChainFinder:
         print(virtual_pairs)
         return virtual_pairs
 
-    def search(self) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
+    def search(self, include_virtuals = True) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
         stack = []
 
         starting_cells = self.starting_cells()
@@ -81,16 +81,19 @@ class ChainFinder:
 
             #check end of chain
             if (current_cell.check_chain_finishes()):
-                print("ending...")
-                return (True, self.reconstruct_virtual_pairs(current_cell))
-
+                if include_virtuals:
+                    return (True, self.reconstruct_virtual_pairs(current_cell))
+                return (True, None)
             #search for linked neighbour
             cell_neighbours = self.get_neighbours(current_cell)
             for neighbour in cell_neighbours:
                 if not neighbour.visited and neighbour.colour == current_cell.colour:
                     neighbour.parent = current_cell
                     stack.append(neighbour)
-            
+
+            if not include_virtuals:
+                continue
+
             num_neighbours = len(cell_neighbours)
             for i in range(num_neighbours):
                 first_neighbour = cell_neighbours[i]
@@ -100,7 +103,7 @@ class ChainFinder:
                     first_neighbour_neighbours = set(self.get_neighbours(first_neighbour))
                     second_neighbour_neighbours = set(self.get_neighbours(second_neighbour))
                     virtual_neighbours = (first_neighbour_neighbours).intersection(second_neighbour_neighbours)
-                    
+
                     for virtual_neighbour in virtual_neighbours:
                         if (not virtual_neighbour.visited) and (virtual_neighbour.colour == current_cell.colour):
                             # VIRTUAL CONNECTION FOUND!!!!
@@ -109,7 +112,7 @@ class ChainFinder:
                             stack.append(virtual_neighbour)
 
         return (False, None)
-    
+
     def starting_cells(self):
         if self.player_colour == Colour.RED:
             # Start from the top row and aim for the bottom row

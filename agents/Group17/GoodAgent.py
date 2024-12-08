@@ -82,9 +82,7 @@ class GoodAgent(AgentBase):
             state[action.x][action.y] = self.colour if our_turn else self.opp_colour()
             our_turn = not our_turn
 
-        # if somehow the whole board gets filled without a win being detected
-        tiles = [[Tile(i, j, state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
-        return self.did_i_win(tiles)
+        return ChainFinder(state, self.colour).search(False)[0]
 
     def backpropagation(self, node: Node, win: bool):
         while node:
@@ -95,52 +93,6 @@ class GoodAgent(AgentBase):
                 node.value += 1
             node = node.parent
         self._parent_node_visits += 1
-
-    def did_i_win(self, tiles: list[list[Tile]]) -> bool:
-        """Copied from Board - Checks if the game has ended. It will attempt to find a red chain
-        from top to bottom or a blue chain from left to right of the board.
-        """
-
-        if self.colour == Colour.RED:
-            for idx in range(self._board_size):
-                tile = tiles[0][idx]
-                if not tile.is_visited() and tile.colour == Colour.RED and self.DFS_colour(0, idx, tiles):
-                    return True
-        else:
-            for idx in range(self._board_size):
-                tile = tiles[idx][0]
-                if not tile.is_visited() and tile.colour == Colour.BLUE and self.DFS_colour(idx, 0, tiles):
-                    return True
-
-        return False
-
-    def DFS_colour(self, x, y, tiles):
-        """Copied from Board - A recursive DFS method that iterates through connected same-colour
-        tiles until it finds a bottom tile (Red) or a right tile (Blue).
-        """
-
-        tiles[x][y].visit()
-
-        # win conditions
-        if self.colour == Colour.RED:
-            if x == self._board_size - 1:
-                return True
-        else:
-            if y == self._board_size - 1:
-                return True
-
-        # visit neighbours
-        for idx in range(Tile.NEIGHBOUR_COUNT):
-            x_n = x + Tile.I_DISPLACEMENTS[idx]
-            y_n = y + Tile.J_DISPLACEMENTS[idx]
-            if (0 <= x_n < self._board_size) and (0 <= y_n < self._board_size):
-                neighbour = tiles[x_n][y_n]
-                if not neighbour.is_visited() and neighbour.colour == self.colour and self.DFS_colour(x_n, y_n, tiles):
-                    # Check if the recursive call found a winning path
-                    return True
-
-        # If no path found from this tile, return False
-        return False
 
     def copy_state(self, state):
         """rows are mutable, so we need a deep copy"""
@@ -154,7 +106,7 @@ class GoodAgent(AgentBase):
         )
         self._parent_node_visits = 0
         self.expansion(root)
-        print(f"Setup time: {time() - start_time:.5f}s")
+        print(f"Total setup time: {time() - start_time:.5f}s")
 
         iterations = 0
         selection_times = []
@@ -204,10 +156,40 @@ class GoodAgent(AgentBase):
             print(f"SOMETHING WENT WRONG, INVALID MOVE: {move}")
             print("MAKING RANDOM MOVE TO AVOID CRASH")
             move = choice(self._choices)
-        
+
         print("MAKING MOVE: ", move)
         self._choices.remove(move)
         return move
+
+    def get_neighbours(self, pos: tuple[int, int]) -> tuple[int,int]:
+        """
+        Returns a list of valid neighbouring nodes for a given node.
+        """
+        neighbour_offsets = [
+            (-1, 0), (-1, 1),(0, 1),(1, 0), (1, -1),(0, -1),
+
+        ]
+
+        neighbours = []
+
+        for dx, dy in neighbour_offsets:
+            nx, ny = pos[0] + dx, pos[1] + dy
+            if  0 <= nx < self._board_size and 0 <= ny < self._board_size:
+                neighbours.append((nx,ny))
+
+        return neighbours
+
+    def find_winning_move_from(self, state: list[list[Colour | None]], tile: tuple[int,int], visited: list) -> Move | None:
+        for neighbour in self.get_neighbours(tile):
+            nx, ny = neighbour
+            if state[nx][ny] is None and neighbour not in visited:
+                visited.append(neighbour)
+                new_state = self.copy_state(state)
+                new_state[nx][ny] = self.colour
+                if ChainFinder(new_state, self.colour).search(False)[0]:
+                    print(f"immediate win: {neighbour}")
+                    return Move(nx, ny)
+        return None
 
     def make_move(self, turn: int, board: Board, opp_move: Move | None) -> Move:
         start_time = time()
@@ -222,29 +204,42 @@ class GoodAgent(AgentBase):
         state = [[tile.colour for tile in row] for row in board.tiles]
 
         # manual check for immediate win
-        for move in self._choices:
-            new_state = self.copy_state(state)
-            new_state[move.x][move.y] = self.colour
-            tiles = [[Tile(i, j, new_state[i][j]) for j in range(self._board_size)] for i in range(self._board_size)]
-            if self.did_i_win(tiles):
-                print(f"immediate win: {move}")
-                return self.end_turn(move)
+        immediate_win_check_start_time = time()
+        visited = []
+        for x in range(self._board_size):
+            for y in range(self._board_size):
+                if state[x][y] == self.colour:
+                    winning_move = self.find_winning_move_from(state, (x, y), visited)
+                    if winning_move:
+                        return self.end_turn(winning_move)
+        print(f"Immediate win check time: {time() - immediate_win_check_start_time:.5f}s")
 
+        winning_chain_check_start_time = time()
         # check for winning chains
         if not self.is_winning_chain:
             self.is_winning_chain, self.virtual_connections = ChainFinder(state, self.colour).search()
         if self.is_winning_chain:
             print(f"virtual connections in winning chain: {self.virtual_connections}")
             for pair in self.virtual_connections:
-                if state[pair[0][0]][pair[0][1]] == self.opp_colour():
-                    return self.end_turn(Move(pair[1][0], pair[1][1]))
-                if state[pair[1][0]][pair[1][1]] == self.opp_colour():
-                    return self.end_turn(Move(pair[0][0], pair[0][1]))
+                x1, y1 = pair[0]
+                x2, y2 = pair[1]
+                if state[x1][y1] == self.opp_colour() and state[x2][y2] is None:
+                    self.virtual_connections.remove(pair)
+                    return self.end_turn(Move(x2, y2))
+                if state[x2][y2] == self.opp_colour() and state[x1][y1] is None:
+                    self.virtual_connections.remove(pair)
+                    return self.end_turn(Move(x1, y1))
             if self.virtual_connections:
-                pair = self.virtual_connections.pop()
-                mx, my = pair[0] # if there are no virtuals we would have already won!
-                return self.end_turn(Move(mx, my))
+                for pair in self.virtual_connections:
+                    x1, y1 = pair[0]
+                    x2, y2 = pair[1]
+                    if state[x1][y1] is None:
+                        self.virtual_connections.remove(pair)
+                        return self.end_turn(Move(x1, y1))
+                    if state[x2][y2] is None:
+                        self.virtual_connections.remove(pair)
+                        return self.end_turn(Move(x2, y2))
+        print(f"Winning chain check time: {time() - winning_chain_check_start_time:.5f}s")
 
         move = self.mcts(state, self._choices, start_time)
         return self.end_turn(move)
-    
