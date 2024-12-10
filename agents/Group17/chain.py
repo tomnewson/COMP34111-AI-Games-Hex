@@ -17,19 +17,6 @@ class Cell:
         self.y = y
         self.visited = False
 
-
-    def check_chain_finishes(self):
-        if self.colour == Colour.RED and self.x == 10:  # last row for RED
-            # We've reached the bottom. Reconstruct path and return it.
-            return True
-
-        if self.colour  == Colour.BLUE and self.y == 10: # last column for BLUE
-            # We've reached the right side. Reconstruct path and return it.
-            return True
-
-
-
-
 class ChainFinder:
     tiles: list[list[Cell]]
     player_colour: Colour
@@ -84,16 +71,15 @@ class ChainFinder:
         virtual_pairs = []
 
         if leaf.colour == Colour.RED and leaf.x == 9:
-            virtual_pairs.append([[10,leaf.y],[10, leaf.y + 1]])
+            virtual_pairs.append(((10,leaf.y),(10, leaf.y + 1)))
 
         if leaf.colour == Colour.BLUE and leaf.y == 9:
-            virtual_pairs.append([[leaf.x,10],[leaf.x + 1,10]])
+            virtual_pairs.append(((leaf.x -1,10),(leaf.x,10)))
 
         while leaf:
             if leaf.virtual_parents:
                 virtual_pairs.append(leaf.virtual_parents)
             leaf = leaf.parent
-        print(virtual_pairs)
         return virtual_pairs
 
     def search(self, include_virtuals = True) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
@@ -102,7 +88,6 @@ class ChainFinder:
         starting_cells = self.starting_cells()
 
         # Initialize the stack
-        print(starting_cells)
         for cell in starting_cells:
             stack.append(cell)
         while stack:
@@ -161,7 +146,7 @@ class ChainFinder:
                     and self.tiles[0][y+1].colour is None
                 ]   
             for cell in red_second_row_starts:
-                cell.virtual_parents = [[0,cell.y],[0,cell.y + 1]]
+                cell.virtual_parents = ((0,cell.y),(0,cell.y + 1))
             
             return red_top_row_starts + red_second_row_starts
         # BLUE: LEFT TO RIGHT
@@ -176,7 +161,7 @@ class ChainFinder:
         ]
 
         for cell in blue_second_column_starts:
-            cell.virtual_parents = [[cell.x,0],[cell.x + 1,0]]
+            cell.virtual_parents = ((cell.x,0),(cell.x + 1,0))
 
         return blue_top_row_starts + blue_second_column_starts
 
