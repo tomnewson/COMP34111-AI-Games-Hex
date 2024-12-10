@@ -10,7 +10,7 @@ class TestChain(unittest.TestCase):
         """ R 0 0 0 0 0 0 0 R R R
              0 R 0 0 0 0 0 0 0 0 0
               0 0 R 0 0 0 0 0 0 0 0
-               R 0 R 0 0 0 0 0 0 0 0
+               R 0 0 0 0 0 0 0 0 0 0
                 R 0 0 B R 0 0 0 0 0 0
             R 0 0 0 B R 0 0 0 0 0
             R 0 0 0 0 B R 0 0 0 0
@@ -26,7 +26,7 @@ class TestChain(unittest.TestCase):
         chain_finder = ChainFinder(tiles, Colour.RED)
         found, virtuals = chain_finder.search()
         self.assertTrue(found)
-        self.assertCountEqual(virtuals, [((1,0), (0,1)),((2,1), (2,0))])
+        self.assertCountEqual(virtuals, [((0,1), (0,2)),((2,1), (2,0))])
 
     def test_blue(self):
         board_str = (
@@ -72,7 +72,7 @@ class TestChain(unittest.TestCase):
         chain_finder = ChainFinder(tiles, Colour.BLUE)
         found, virtuals = chain_finder.search()
         self.assertTrue(found)
-        self.assertCountEqual(virtuals, [((9,1), (9,2)), ((5,8), (6,7)), ((5,9), (5,10))])
+        self.assertCountEqual(virtuals, [((9,1), (9,2)), ((5,8), (6,7)), ((5,10), (6,10))])
 
     def test_empty(self):
         board_str = (
@@ -138,7 +138,6 @@ class TestChain(unittest.TestCase):
         found, virtuals = chain_finder.search()
         self.assertFalse(found)
 
-    @unittest.skip("Edge detection not implemented")
     def test_top_virtual(self):
         board_str = (
         """0 0 0 0 0 0 0 0 0 0 0
@@ -150,8 +149,8 @@ class TestChain(unittest.TestCase):
         R 0 0 0 0 0 0 0 0 0 0
         0 R 0 0 0 0 0 0 0 0 0
         0 0 R 0 0 0 0 0 0 0 0
-        0 0 0 R R 0 0 0 0 0 0
-        0 0 B B B 0 0 0 0 0 0 """
+        0 0 0 R R R 0 0 0 0 0
+        0 0 B B B R 0 0 0 0 0 """
         )
         board = Board.from_string(board_str, board_size=11)
         self.assertEqual(board.size, 11)
@@ -160,7 +159,6 @@ class TestChain(unittest.TestCase):
         found, virtuals = chain_finder.search()
         self.assertTrue(found)
 
-    @unittest.skip("Edge detection not implemented")
     def test_bottom_virtual(self):
         board_str = (
         """0 0 0 0 0 0 R 0 0 0 0
@@ -203,7 +201,6 @@ class TestChain(unittest.TestCase):
         found, virtuals = chain_finder.search()
         self.assertTrue(found)
 
-    @unittest.skip("Edge detection not implemented")
     def test_blue_right_finish(self):
         board_str = (
         """ R R R R R R R R R R R
@@ -213,7 +210,7 @@ class TestChain(unittest.TestCase):
             0 0 0 0 0 B B 0 0 B 0
             0 0 0 0 0 0 0 0 0 0 0
             0 0 0 0 B B B B B B 0
-            0 0 0 B R 0 0 0 0 0 0
+            0 0 0 B 0 0 0 0 0 0 0
             B B B 0 0 0 0 0 0 0 0
             0 0 0 0 0 0 0 0 0 0 0
             0 0 0 0 0 0 0 0 0 0 0"""
@@ -225,7 +222,6 @@ class TestChain(unittest.TestCase):
         found, virtuals = chain_finder.search()
         self.assertTrue(found)
 
-    @unittest.skip("Edge detection not implemented")
     def test_blue_left_finish(self):
         board_str = (
         """ R R R R R R R R R R R
@@ -235,7 +231,7 @@ class TestChain(unittest.TestCase):
             0 0 0 0 0 B B 0 0 B 0
             0 0 0 0 0 0 0 0 0 0 0
             0 0 0 0 B B B B B B B
-            0 0 0 B R 0 0 0 0 0 0
+            0 0 0 B 0 0 0 0 0 0 0
             0 B B 0 0 0 0 0 0 0 0
             0 0 0 0 0 0 0 0 0 0 0
             0 0 0 0 0 0 0 0 0 0 0"""

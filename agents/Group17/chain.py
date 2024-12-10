@@ -17,16 +17,6 @@ class Cell:
         self.y = y
         self.visited = False
 
-
-    def check_chain_finishes(self):
-        if self.colour == Colour.RED and self.x == 10:  # last row for RED
-            # We've reached the bottom. Reconstruct path and return it.
-            return True
-
-        if self.colour  == Colour.BLUE and self.y == 10: # last column for BLUE
-            # We've reached the right side. Reconstruct path and return it.
-            return True
-
 class ChainFinder:
     tiles: list[list[Cell]]
     player_colour: Colour
@@ -52,14 +42,44 @@ class ChainFinder:
                 neighbours.append(self.tiles[nx][ny])
 
         return neighbours
+    
+    def check_chain_finishes(self,cell):
+        # RED finishes if it reaches the bottom row
+        if cell.colour == Colour.RED:
+            if cell.x == 10:
+                return True
+            # Check "virtual finish" from the second-to-last row
+            if cell.x == 9 and cell.y + 1 < 11:
+                if (self.tiles[cell.x + 1][cell.y].colour is None and
+                    self.tiles[cell.x + 1][cell.y + 1].colour is None):
+                    return True
+
+        # BLUE finishes if it reaches the rightmost column
+        if cell.colour == Colour.BLUE:
+            if cell.y == 10:
+                return True
+            # Check "virtual finish" from the second-to-last column
+            if cell.y == 9 and cell.x + 1 < 11:
+                if (self.tiles[cell.x][cell.y + 1].colour is None and
+                    self.tiles[cell.x + 1][cell.y + 1].colour is None):
+                    return True
+
+        return False
 
     def reconstruct_virtual_pairs(self, leaf):
+        ## check virtual kids from row/col  9 
         virtual_pairs = []
+
+        if leaf.colour == Colour.RED and leaf.x == 9:
+            virtual_pairs.append(((10,leaf.y),(10, leaf.y + 1)))
+
+        if leaf.colour == Colour.BLUE and leaf.y == 9:
+            virtual_pairs.append(((leaf.x -1,10),(leaf.x,10)))
+
         while leaf:
             if leaf.virtual_parents:
                 virtual_pairs.append(leaf.virtual_parents)
             leaf = leaf.parent
-        print(virtual_pairs)
         return virtual_pairs
 
     def search(self, include_virtuals = True) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
@@ -80,7 +100,7 @@ class ChainFinder:
             current_cell.visited = True
 
             #check end of chain
-            if (current_cell.check_chain_finishes()):
+            if (self.check_chain_finishes(current_cell)):
                 if include_virtuals:
                     return (True, self.reconstruct_virtual_pairs(current_cell))
                 return (True, None)
@@ -114,11 +134,36 @@ class ChainFinder:
         return (False, None)
 
     def starting_cells(self):
+        #RED: TOP TO BOTTOM
         if self.player_colour == Colour.RED:
-            # Start from the top row and aim for the bottom row
-            return [cell for cell in self.tiles[0] if cell.colour == self.player_colour]
-        # Start from the left column and aim for the right column
-        return [row[0] for row in self.tiles if row[0].colour == self.player_colour]
+            red_top_row_starts = [cell for cell in self.tiles[0] if cell.colour == self.player_colour]
+
+            red_second_row_starts = [
+                    cell for y, cell in enumerate(self.tiles[1])
+                    if cell.colour == self.player_colour
+                    and y + 1 < 11
+                    and self.tiles[0][y].colour is None
+                    and self.tiles[0][y+1].colour is None
+                ]   
+            for cell in red_second_row_starts:
+                cell.virtual_parents = ((0,cell.y),(0,cell.y + 1))
+            
+            return red_top_row_starts + red_second_row_starts
+        # BLUE: LEFT TO RIGHT
+        blue_top_row_starts = [row[0] for row in self.tiles if row[0].colour == self.player_colour]
+
+        blue_second_column_starts = [
+            row[1] for x, row in enumerate(self.tiles)
+            if row[1].colour == self.player_colour
+            and x + 1 < 11
+            and self.tiles[x][0].colour is None
+            and self.tiles[x+1][0].colour is None
+        ]
+
+        for cell in blue_second_column_starts:
+            cell.virtual_parents = ((cell.x,0),(cell.x + 1,0))
+
+        return blue_top_row_starts + blue_second_column_starts
 
     def is_within_bounds(self, node: tuple[int, int]) -> bool:
         """
