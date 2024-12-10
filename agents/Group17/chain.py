@@ -43,11 +43,12 @@ class ChainFinder:
 
         return neighbours
     
-    def check_chain_finishes(self,cell):
+    def check_chain_finishes(self,cell, include_virtuals):
         # RED finishes if it reaches the bottom row
         if cell.colour == Colour.RED:
             if cell.x == 10:
                 return True
+            if not include_virtuals: return False
             # Check "virtual finish" from the second-to-last row
             if cell.x == 9 and cell.y + 1 < 11:
                 if (self.tiles[cell.x + 1][cell.y].colour is None and
@@ -58,6 +59,7 @@ class ChainFinder:
         if cell.colour == Colour.BLUE:
             if cell.y == 10:
                 return True
+            if not include_virtuals: return False
             # Check "virtual finish" from the second-to-last column
             if cell.y == 9 and cell.x + 1 < 11:
                 if (self.tiles[cell.x][cell.y + 1].colour is None and
@@ -85,7 +87,7 @@ class ChainFinder:
     def search(self, include_virtuals = True) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
         stack = []
 
-        starting_cells = self.starting_cells()
+        starting_cells = self.starting_cells(include_virtuals)
 
         # Initialize the stack
         for cell in starting_cells:
@@ -100,7 +102,7 @@ class ChainFinder:
             current_cell.visited = True
 
             #check end of chain
-            if (self.check_chain_finishes(current_cell)):
+            if (self.check_chain_finishes(current_cell, include_virtuals)):
                 if include_virtuals:
                     return (True, self.reconstruct_virtual_pairs(current_cell))
                 return (True, None)
@@ -133,11 +135,12 @@ class ChainFinder:
 
         return (False, None)
 
-    def starting_cells(self):
+    def starting_cells(self, include_virtuals):
         #RED: TOP TO BOTTOM
         if self.player_colour == Colour.RED:
             red_top_row_starts = [cell for cell in self.tiles[0] if cell.colour == self.player_colour]
-
+            if not include_virtuals: 
+                return red_top_row_starts
             red_second_row_starts = [
                     cell for y, cell in enumerate(self.tiles[1])
                     if cell.colour == self.player_colour
@@ -150,8 +153,9 @@ class ChainFinder:
             
             return red_top_row_starts + red_second_row_starts
         # BLUE: LEFT TO RIGHT
-        blue_top_row_starts = [row[0] for row in self.tiles if row[0].colour == self.player_colour]
-
+        blue_top_col_starts = [row[0] for row in self.tiles if row[0].colour == self.player_colour]
+        if not include_virtuals: 
+            return blue_top_col_starts
         blue_second_column_starts = [
             row[1] for x, row in enumerate(self.tiles)
             if row[1].colour == self.player_colour
@@ -163,7 +167,7 @@ class ChainFinder:
         for cell in blue_second_column_starts:
             cell.virtual_parents = ((cell.x,0),(cell.x + 1,0))
 
-        return blue_top_row_starts + blue_second_column_starts
+        return blue_top_col_starts + blue_second_column_starts
 
     def is_within_bounds(self, node: tuple[int, int]) -> bool:
         """
