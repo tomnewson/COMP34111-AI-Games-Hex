@@ -27,6 +27,9 @@ class Cell:
             # We've reached the right side. Reconstruct path and return it.
             return True
 
+
+
+
 class ChainFinder:
     tiles: list[list[Cell]]
     player_colour: Colour
@@ -52,9 +55,40 @@ class ChainFinder:
                 neighbours.append(self.tiles[nx][ny])
 
         return neighbours
+    
+    def check_chain_finishes(self,cell):
+        # RED finishes if it reaches the bottom row
+        if cell.colour == Colour.RED:
+            if cell.x == 10:
+                return True
+            # Check "virtual finish" from the second-to-last row
+            if cell.x == 9 and cell.y + 1 < 11:
+                if (self.tiles[cell.x + 1][cell.y].colour is None and
+                    self.tiles[cell.x + 1][cell.y + 1].colour is None):
+                    return True
+
+        # BLUE finishes if it reaches the rightmost column
+        if cell.colour == Colour.BLUE:
+            if cell.y == 10:
+                return True
+            # Check "virtual finish" from the second-to-last column
+            if cell.y == 9 and cell.x + 1 < 11:
+                if (self.tiles[cell.x][cell.y + 1].colour is None and
+                    self.tiles[cell.x + 1][cell.y + 1].colour is None):
+                    return True
+
+        return False
 
     def reconstruct_virtual_pairs(self, leaf):
+        ## check virtual kids from row/col  9 
         virtual_pairs = []
+
+        if leaf.colour == Colour.RED and leaf.x == 9:
+            virtual_pairs.append([[10,leaf.y],[10, leaf.y + 1]])
+
+        if leaf.colour == Colour.BLUE and leaf.y == 9:
+            virtual_pairs.append([[leaf.x,10],[leaf.x + 1,10]])
+
         while leaf:
             if leaf.virtual_parents:
                 virtual_pairs.append(leaf.virtual_parents)
@@ -81,7 +115,7 @@ class ChainFinder:
             current_cell.visited = True
 
             #check end of chain
-            if (current_cell.check_chain_finishes()):
+            if (self.check_chain_finishes(current_cell)):
                 if include_virtuals:
                     return (True, self.reconstruct_virtual_pairs(current_cell))
                 return (True, None)
