@@ -51,6 +51,34 @@ class TestChain(unittest.TestCase):
         self.assertTrue(found)
         self.assertCountEqual(virtuals, [((2,5), (3,4))])
 
+    def test_direct_chain_ignores_edge(self):
+        board_str = (
+        """ 0 R 0 0 0 0 0 0 0 0 0 
+            0 0 0 0 0 0 0 0 R 0 R 
+            0 0 0 0 0 0 0 B R B 0 
+            0 0 0 0 0 B 0 R B 0 0 
+            0 0 R 0 0 B R B 0 0 0 
+            0 0 0 R 0 0 B 0 0 0 0 
+            0 0 0 R B B R 0 R R 0 
+            0 0 R 0 R B 0 R 0 0 0 
+            0 0 R R B R B R B 0 B 
+            0 B B B B R B R R 0 R 
+            B R 0 0 B B 0 0 0 B 0 """
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        chain_finder = ChainFinder(tiles, Colour.BLUE)
+        found, virtuals = chain_finder.search(False)
+        self.assertFalse(found)
+
+        tiles[2][10] = Colour.BLUE
+        chain_finder = ChainFinder(tiles, Colour.BLUE)
+        found, virtuals = chain_finder.search(False)
+        self.assertTrue(found)
+
+
     def test_blue_right_drop_wiggle(self):
         board_str = (
         """ R R R R R R R R R R R
