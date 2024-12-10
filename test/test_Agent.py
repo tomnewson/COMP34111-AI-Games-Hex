@@ -53,7 +53,7 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(board.size, 11)
         agent = GoodAgent(Colour.BLUE)
         position = (6,9)
-        expected_moves = (Move(5,10), Move(6,10))
+        expected_moves = ((5,10), (6,10))
 
         actual_move = agent.find_winning_move_from(state, position, [])
         self.assertIsNotNone(actual_move)

@@ -12,12 +12,12 @@ class TestChain(unittest.TestCase):
               0 0 R 0 0 0 0 0 0 0 0
                R 0 0 0 0 0 0 0 0 0 0
                 R 0 0 B R 0 0 0 0 0 0
-            R 0 0 0 B R 0 0 0 0 0
-            R 0 0 0 0 B R 0 0 0 0
-            R 0 0 0 0 0 0 R 0 0 0
-            R 0 0 0 0 0 0 0 0 0 0
-            R 0 0 0 0 0 R 0 0 0 0
-            R 0 0 0 0 0 R R 0 0 0"""
+                 R 0 0 0 B R 0 0 0 0 0
+                  R 0 0 0 0 B R 0 0 0 0
+                   R 0 0 0 0 0 0 R 0 0 0
+                    R 0 0 0 0 0 0 0 0 0 0
+                     R 0 0 0 0 0 R 0 0 0 0
+                      R 0 0 0 0 0 R R 0 0 0"""
         )
         board = Board.from_string(board_str, board_size=11)
         self.assertEqual(board.size, 11)
@@ -53,16 +53,16 @@ class TestChain(unittest.TestCase):
 
     def test_direct_chain_ignores_edge(self):
         board_str = (
-        """ 0 R 0 0 0 0 0 0 0 0 0 
-            0 0 0 0 0 0 0 0 R 0 R 
-            0 0 0 0 0 0 0 B R B 0 
-            0 0 0 0 0 B 0 R B 0 0 
-            0 0 R 0 0 B R B 0 0 0 
-            0 0 0 R 0 0 B 0 0 0 0 
-            0 0 0 R B B R 0 R R 0 
-            0 0 R 0 R B 0 R 0 0 0 
-            0 0 R R B R B R B 0 B 
-            0 B B B B R B R R 0 R 
+        """ 0 R 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 R 0 R
+            0 0 0 0 0 0 0 B R B 0
+            0 0 0 0 0 B 0 R B 0 0
+            0 0 R 0 0 B R B 0 0 0
+            0 0 0 R 0 0 B 0 0 0 0
+            0 0 0 R B B R 0 R R 0
+            0 0 R 0 R B 0 R 0 0 0
+            0 0 R R B R B R B 0 B
+            0 B B B B R B R R 0 R
             B R 0 0 B B 0 0 0 B 0 """
         )
         board = Board.from_string(board_str, board_size=11)
