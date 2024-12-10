@@ -68,6 +68,7 @@ class ChainFinder:
         starting_cells = self.starting_cells()
 
         # Initialize the stack
+        print(starting_cells)
         for cell in starting_cells:
             stack.append(cell)
         while stack:
@@ -114,11 +115,36 @@ class ChainFinder:
         return (False, None)
 
     def starting_cells(self):
+        #RED: TOP TO BOTTOM
         if self.player_colour == Colour.RED:
-            # Start from the top row and aim for the bottom row
-            return [cell for cell in self.tiles[0] if cell.colour == self.player_colour]
-        # Start from the left column and aim for the right column
-        return [row[0] for row in self.tiles if row[0].colour == self.player_colour]
+            red_top_row_starts = [cell for cell in self.tiles[0] if cell.colour == self.player_colour]
+
+            red_second_row_starts = [
+                    cell for y, cell in enumerate(self.tiles[1])
+                    if cell.colour == self.player_colour
+                    and y + 1 < 11
+                    and self.tiles[0][y].colour is None
+                    and self.tiles[0][y+1].colour is None
+                ]   
+            for cell in red_second_row_starts:
+                cell.virtual_parents = [[0,cell.y],[0,cell.y + 1]]
+            
+            return red_top_row_starts + red_second_row_starts
+        # BLUE: LEFT TO RIGHT
+        blue_top_row_starts = [row[0] for row in self.tiles if row[0].colour == self.player_colour]
+
+        blue_second_column_starts = [
+            row[1] for x, row in enumerate(self.tiles)
+            if row[1].colour == self.player_colour
+            and x + 1 < 11
+            and self.tiles[x][0].colour is None
+            and self.tiles[x+1][0].colour is None
+        ]
+
+        for cell in blue_second_column_starts:
+            cell.virtual_parents = [[cell.x,0],[cell.x + 1,0]]
+
+        return blue_top_row_starts + blue_second_column_starts
 
     def is_within_bounds(self, node: tuple[int, int]) -> bool:
         """
