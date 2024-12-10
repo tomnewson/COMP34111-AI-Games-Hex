@@ -1,13 +1,8 @@
-from random import choice, shuffle
-from time import time
-import math
-
 from agents.Group17.GoodAgent import GoodAgent
 from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
-from src.Tile import Tile
 
 class HumanAgent(AgentBase):
     _choices: list[Move]
