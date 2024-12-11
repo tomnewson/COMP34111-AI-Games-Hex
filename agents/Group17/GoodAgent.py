@@ -232,8 +232,10 @@ class GoodAgent(AgentBase):
             self._choices.remove((opp_move.x, opp_move.y))
 
         # ALWAYS SWAP
-        if turn == 2:
+        print(f"\033[32mOpponent move: {opp_move}\033[0m")
+        if turn == 2 and 3 <= opp_move.x <= 7 and 3 <= opp_move.y <= 7:
             return Move(-1, -1)
+
 
         state = [[tile.colour for tile in row] for row in board.tiles]
 
