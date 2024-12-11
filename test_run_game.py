@@ -8,7 +8,7 @@ def run_game(command):
     return end_time - start_time
 
 def main():
-    num_runs = 10
+    num_runs = 20
 
     # First set of agents
     total_time_1 = 0
