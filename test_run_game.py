@@ -27,7 +27,7 @@ def main():
     # Print results
     print(f"Average time taken to run the first game: {average_time_1:.5f} seconds")
     print(f"Average time taken to run the second game: {average_time_2:.5f} seconds")
-    print(f"Difference in average time: {average_time_1 - average_time_2:.5f} seconds")
+    print(f"Difference in average time: {abs(average_time_1 - average_time_2):.5f} seconds")
 
 if __name__ == "__main__":
     main()
