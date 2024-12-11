@@ -231,7 +231,7 @@ class GoodAgent(AgentBase):
         if opp_move and opp_move != Move(-1, -1):
             self._choices.remove((opp_move.x, opp_move.y))
 
-        # ALWAYS SWAP
+        # Only swap if first move is within 2 cells from center
         print(f"\033[32mOpponent move: {opp_move}\033[0m")
         if turn == 2 and 3 <= opp_move.x <= 7 and 3 <= opp_move.y <= 7:
             return Move(-1, -1)
