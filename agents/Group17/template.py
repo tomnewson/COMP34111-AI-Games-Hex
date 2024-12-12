@@ -91,18 +91,35 @@ class ChainFinder:
             leaf = leaf.parent
         return virtual_pairs
     
+    
     def check_template(self, current_cell):
         pass
     
+    
     def rotate_template(self, offsets, orientation: Orientation) -> list[tuple[int, int]]:
         '''
-        Returns a list of coordinates, rotated by to a given orientation.
+        Returns a list of coordinates, rotated to a given orientation.
         
         Orientation corresponds to which edge the bottom of the 
         template will be facing when it has been rotated.
         '''
         
+        rotated_offsets = []
         
+        for x, y in offsets:
+            if orientation == Orientation.LEFT:
+                rotated_x = -y
+                rotated_y = x
+            elif orientation == Orientation.RIGHT:
+                rotated_x = y
+                rotated_y = -x
+            elif orientation == Orientation.TOP:
+                rotated_x = -x
+                rotated_x = -y
+                
+            rotated_offsets.append((rotated_x, rotated_y))
+        
+        return rotated_offsets
         
         
     def is_ziggurat(self, cell) -> bool:
@@ -143,6 +160,7 @@ class ChainFinder:
             
         print(f"Found a ziggurat at: ({cell.x}, {cell.y})")
         return True
+    
 
     def search(self, include_virtuals = True) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
         stack = []
