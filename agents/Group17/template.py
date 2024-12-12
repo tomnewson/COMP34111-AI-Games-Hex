@@ -122,7 +122,13 @@ class ChainFinder:
         return rotated_offsets
         
         
-    def is_ziggurat(self, cell) -> bool:
+    def ziggurat_present(self, cell) -> bool:
+        '''
+        Function that checks whether a cell has a ziggurat
+        around it or not.
+        
+        Returns a boolean value when a ziggurat is present.
+        '''
         # The top of the template is always two rows
         # or columns above the edge, as it is an edge template.
         if self.player_colour == Colour.RED:
