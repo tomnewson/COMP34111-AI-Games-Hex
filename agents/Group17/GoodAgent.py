@@ -7,6 +7,7 @@ from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
 from src.Move import Move
+from agents.Group17.bridgeDefender import BridgeDefender
 
 class Node:
     children = None # set in expansion
@@ -236,7 +237,6 @@ class GoodAgent(AgentBase):
         if turn == 2 and 3 <= opp_move.x <= 7 and 3 <= opp_move.y <= 7:
             return Move(-1, -1)
 
-
         state = [[tile.colour for tile in row] for row in board.tiles]
 
         # manual check for immediate win
@@ -261,5 +261,12 @@ class GoodAgent(AgentBase):
                 return self.end_turn(move)
         print(f"Winning chain check time: {time() - winning_chain_check_start_time:.5f}s")
 
+        if not self.is_winning_chain:
+            bridgeDefendStartTime = time()
+            move = BridgeDefender(state, self.colour).task(self.colour)
+            if move:
+                return self.end_turn(move)
+            print(f"Time defending bridges: {time() - bridgeDefendStartTime:.5f}s")
+        
         move = self.mcts(state, self._choices, start_time)
         return self.end_turn(move)
