@@ -40,7 +40,7 @@ class Node:
 class GoodAgent(AgentBase):
     _choices: list[tuple[int, int]]
     _board_size: int = 11
-    _time_limit: int = 2 # seconds per move
+    _time_limit: int = 5 # seconds per move
     _max_iterations: int = 20_000
     EXPLORATION_CONSTANT = 2
     _parent_node_visits: int
