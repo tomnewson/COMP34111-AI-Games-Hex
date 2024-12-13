@@ -39,9 +39,7 @@ class BridgeDefender:
         return self.findBridges(playerColour)
 
     def findBridges(self, playerColour):
-        print(
-            f"{RED if playerColour == Colour.RED else BLUE}Finding bridges for {playerColour}...{RESET}"
-        )
+        # print(f"{RED if playerColour == Colour.RED else BLUE}Finding bridges for {playerColour}...{RESET}")
         bridges = []
         opponentColour = Colour.RED if playerColour == Colour.BLUE else Colour.BLUE
         bridges.append("test")
@@ -72,9 +70,7 @@ class BridgeDefender:
                             and self.tiles[nx][ny].colour == playerColour
                             and not self.tiles[nx][ny].visited
                         ):
-                            print(
-                                f"Potential Bridge Found! ({cell.x},{cell.y})({nx},{ny})"
-                            )
+                            # print(f"Potential Bridge Found! ({cell.x},{cell.y})({nx},{ny})")
                             (mx0, my0), (mx1, my1) = midOffsets[(dx, dy)]
                             midx0, midy0 = cell.x + mx0, cell.y + my0
                             midx1, midy1 = cell.x + mx1, cell.y + my1
@@ -90,6 +86,7 @@ class BridgeDefender:
                             # Check conditions
                             for condition, result in conditions:
                                 if condition:
+                                    # # print(f"{GREEN}Bridge Defended{RESET}")
                                     return result
 
         return None
