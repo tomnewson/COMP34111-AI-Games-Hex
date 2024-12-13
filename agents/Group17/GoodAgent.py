@@ -261,6 +261,12 @@ class GoodAgent(AgentBase):
             if move:
                 return self.end_turn(move)
         print(f"Winning chain check time: {time() - winning_chain_check_start_time:.5f}s")
+
+        bridgeDefendStartTime = time()
+        move = BridgeDefender(state, self.colour).task()
+        if move:
+            return self.end_turn(move)
+        print(f"Time defending bridges: {time() - bridgeDefendStartTime:.5f}s")
         
         # Check for templates
         template_check_start_time = time()
@@ -268,13 +274,6 @@ class GoodAgent(AgentBase):
         if move:
             return self.end_turn(move)
         print(f"Template check time: {time() - template_check_start_time:.5f}s")
-
-        if not self.is_winning_chain:
-            bridgeDefendStartTime = time()
-            move = BridgeDefender(state, self.colour).task()
-            if move:
-                return self.end_turn(move)
-            print(f"Time defending bridges: {time() - bridgeDefendStartTime:.5f}s")
         
         move = self.mcts(state, self._choices, start_time)
         return self.end_turn(move)
