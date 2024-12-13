@@ -92,9 +92,39 @@ class ChainFinder:
         return virtual_pairs
     
     
-    def check_template(self, current_cell):
-        pass
-    
+    def check_template(self) -> tuple[int, int] | None:
+        chosen_cell = Cell([[]], 0, 0)
+        
+        if self.player_colour == Colour.BLUE:
+            for cell in self.tiles[2]:
+                if cell.colour is Colour.BLUE:
+                    chosen_cell = cell
+                    break
+        
+        if self.player_colour == Colour.BLUE:
+            for cell in self.tiles[4]:
+                if cell.colour is Colour.BLUE:
+                    chosen_cell = cell
+                    break
+                    
+        if self.player_colour == Colour.RED:         
+            for i in range(len(self.tiles[0]) - 1):
+                cell = self.tiles[i][2]
+            
+                if cell.colour is Colour.RED:
+                    chosen_cell = cell
+                    break
+            
+            for i in range(len(self.tiles[0]) - 1):
+                cell = self.tiles[i][8]
+                
+                if cell.colour is Colour.RED:
+                    chosen_cell = cell
+                    break
+            
+        move = self.ziggurat_present(chosen_cell)
+            
+        return move
     
     def rotate_template(self, offsets, orientation: Orientation) -> list[tuple[int, int]]:
         '''
@@ -108,11 +138,11 @@ class ChainFinder:
         
         for x, y in offsets:
             if orientation == Orientation.LEFT:
-                rotated_x = -y
-                rotated_y = x
-            elif orientation == Orientation.RIGHT:
                 rotated_x = y
                 rotated_y = -x
+            elif orientation == Orientation.RIGHT:
+                rotated_x = -y
+                rotated_y = x
             elif orientation == Orientation.TOP:
                 rotated_x = -x
                 rotated_x = -y
@@ -122,7 +152,7 @@ class ChainFinder:
         return rotated_offsets
         
         
-    def ziggurat_present(self, cell) -> bool:
+    def ziggurat_present(self, cell) -> tuple[int, int] | None:
         '''
         Function that checks whether a cell has a ziggurat
         around it or not.
@@ -132,11 +162,11 @@ class ChainFinder:
         # The top of the template is always two rows
         # or columns above the edge, as it is an edge template.
         if self.player_colour == Colour.RED:
-            if not cell.x == 2 and not cell.x == 4:
-                return False
+            if not cell.x == 2 and not cell.x == 8:
+                return None
         else:
-            if not cell.y == 2 and not cell.y == 4:
-                return False
+            if not cell.y == 2 and not cell.y == 8:
+                return None
         
         #   xo
         #  ooo
@@ -153,7 +183,7 @@ class ChainFinder:
             if cell.y == 2:
                 ziggurat_offsets = self.rotate_template(ziggurat_offsets, Orientation.LEFT)
             
-            if cell.y == 4:
+            if cell.y == 8:
                 ziggurat_offsets = self.rotate_template(ziggurat_offsets, Orientation.RIGHT)
         
         # Use cell offsets to check cells around current cell
@@ -162,10 +192,12 @@ class ChainFinder:
             nx, ny = cell.x + dx, cell.y + dy
             
             if not self.is_within_bounds((nx, ny)) or self.tiles[nx][ny].colour is not None:
-                return False
+                return None
+            
+        offset_cell = ziggurat_offsets[1]
             
         print(f"Found a ziggurat at: ({cell.x}, {cell.y})")
-        return True
+        return (cell.x + offset_cell[0], cell.y + offset_cell[1])
     
 
     def search(self, include_virtuals = True) -> tuple[bool, list[tuple[tuple[int, int], tuple[int, int]]]]:
