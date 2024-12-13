@@ -263,7 +263,7 @@ class GoodAgent(AgentBase):
 
         if not self.is_winning_chain:
             bridgeDefendStartTime = time()
-            move = BridgeDefender(state, self.colour).task(self.colour)
+            move = BridgeDefender(state, self.colour).task()
             if move:
                 return self.end_turn(move)
             print(f"Time defending bridges: {time() - bridgeDefendStartTime:.5f}s")

@@ -24,7 +24,7 @@ class TestBridge(unittest.TestCase):
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, (4, 6))
 
     def test2(self):
@@ -33,8 +33,8 @@ class TestBridge(unittest.TestCase):
                 0 0 0 0 0 0 0 0 0 0 0 
                  0 0 0 0 0 0 0 0 0 0 0 
                   0 0 0 0 0 0 0 0 0 0 0 
-                   0 0 0 0 0 0 B R 0 0 0 
-                    0 0 0 0 0 R 0 0 0 0 0 
+                   0 0 0 0 0 0 R B 0 0 0 
+                    0 0 0 0 0 B 0 0 0 0 0 
                      0 0 0 0 0 0 0 0 0 0 0 
                       0 0 0 0 0 0 0 0 0 0 0 
                        0 0 0 0 0 0 0 0 0 0 0 
@@ -45,8 +45,8 @@ class TestBridge(unittest.TestCase):
         self.assertEqual(board.size, 11)
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
-        bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        bridgeFinder = BridgeDefender(tiles, Colour.BLUE)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, (5, 6))
 
     def test3(self):
@@ -68,7 +68,7 @@ class TestBridge(unittest.TestCase):
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, (6, 4))
 
     def test4(self):
@@ -90,7 +90,7 @@ class TestBridge(unittest.TestCase):
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, (6, 5))
 
     def test5(self):
@@ -112,7 +112,7 @@ class TestBridge(unittest.TestCase):
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, (6, 4))
 
     def test6(self):
@@ -134,7 +134,7 @@ class TestBridge(unittest.TestCase):
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, (4, 5))
 
     def testNoPierceAttempt(self):
@@ -156,7 +156,7 @@ class TestBridge(unittest.TestCase):
 
         tiles = [[tile.colour for tile in row] for row in board.tiles]
         bridgeFinder = BridgeDefender(tiles, Colour.RED)
-        ans = bridgeFinder.task(Colour.RED)
+        ans = bridgeFinder.task()
         self.assertEqual(ans, None)
 
 
