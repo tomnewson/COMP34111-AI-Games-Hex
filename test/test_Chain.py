@@ -417,6 +417,96 @@ class TestChain(unittest.TestCase):
         chain_finder = ChainFinder(tiles, Colour.BLUE)
         found, virtuals = chain_finder.search()
         self.assertFalse(found)
+        
+    def test_ziggurat_found_red(self):
+        board_str = (
+"""0 0 0 0 0 0 0 0 0 0 0 
+ 0 0 0 0 0 0 0 0 0 0 0 
+  0 0 0 0 0 0 0 0 0 0 0 
+   0 0 0 0 0 B R B 0 B 0 
+    0 B R R 0 B B R B B B 
+     0 R R R R B R B B 0 R 
+      R R R 0 B B R 0 B B R 
+       0 0 0 R R B 0 B B B R 
+        R 0 0 0 R 0 B 0 R 0 0 
+         0 0 0 0 0 0 0 0 0 0 0 
+          0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        chain_finder = ChainFinder(tiles, Colour.RED)
+        found = chain_finder.check_template()
+            
+        self.assertTrue(found is not None)
+        
+    def test_ziggurat_found_blue(self):
+        board_str = (
+"""0 0 0 0 0 0 0 0 0 0 0 
+ 0 0 0 0 0 0 0 0 0 0 0 
+  0 0 0 0 0 0 0 0 0 0 0 
+   0 0 0 0 0 0 0 0 0 0 0 
+    0 0 B R 0 0 0 R 0 0 0 
+     0 0 0 0 0 0 0 0 0 0 0 
+      0 0 0 0 0 0 0 0 0 0 0 
+       0 0 0 0 0 0 0 0 0 0 0 
+        0 0 0 0 0 0 0 0 0 0 0 
+         0 0 0 0 0 0 0 0 0 0 0 
+          0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        chain_finder = ChainFinder(tiles, Colour.BLUE)
+        found = chain_finder.check_template()
+            
+        self.assertTrue(found is not None)
+        
+    def test_no_ziggurat_found_red(self):
+        board_str = (
+        """0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                0 0 R 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                    0 0 0 0 0 0 0 0 0 0 0
+                    0 0 0 0 0 0 0 0 0 0 0
+                    0 0 0 0 0 0 0 0 0 0 0 """
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        chain_finder = ChainFinder(tiles, Colour.RED)
+        found = found if chain_finder.check_template() is not None else False
+        self.assertFalse(found)
+        
+    def test_no_ziggurat_found_blue(self):
+        board_str = (
+        """0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+            0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                0 0 0 0 0 0 0 0 0 0 0
+                    0 0 0 0 B 0 0 0 0 0 0
+                    0 0 0 0 0 0 0 0 0 0 0
+                    0 0 0 0 0 0 0 0 0 0 0 """
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        chain_finder = ChainFinder(tiles, Colour.BLUE)
+        found = found if chain_finder.check_template() is not None else False
+        self.assertFalse(found)
 
 if __name__ == "__main__":
     unittest.main()
