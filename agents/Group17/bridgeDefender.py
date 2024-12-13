@@ -35,8 +35,8 @@ class BridgeDefender:
         ]
         self.playerColour = colour
 
-    def task(self, playerColour):
-        return self.findBridges(playerColour)
+    def task(self):
+        return self.findBridges(self.playerColour)
 
     def findBridges(self, playerColour):
         # print(f"{RED if playerColour == Colour.RED else BLUE}Finding bridges for {playerColour}...{RESET}")
