@@ -2,7 +2,8 @@ from random import choice, shuffle
 from time import time
 import math
 
-from agents.Group17.chain import ChainFinder
+# from agents.Group17.chain import ChainFinder
+from agents.Group17.template import ChainFinder
 from src.AgentBase import AgentBase
 from src.Board import Board
 from src.Colour import Colour
@@ -260,6 +261,13 @@ class GoodAgent(AgentBase):
             if move:
                 return self.end_turn(move)
         print(f"Winning chain check time: {time() - winning_chain_check_start_time:.5f}s")
+        
+        # Check for templates
+        template_check_start_time = time()
+        move = ChainFinder(state, self.colour).check_template()
+        if move:
+            return self.end_turn(move)
+        print(f"Template check time: {time() - template_check_start_time:.5f}s")
 
         move = self.mcts(state, self._choices, start_time)
         return self.end_turn(move)
