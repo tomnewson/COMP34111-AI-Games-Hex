@@ -71,16 +71,82 @@ class TestBridge(unittest.TestCase):
         ans = bridgeFinder.task(Colour.RED)
         self.assertEqual(ans, (6, 4))
 
-    def test10(self):
+    def test4(self):
         board_str = (
             """0 0 0 0 0 0 0 0 0 0 0 
                 0 0 0 0 0 0 0 0 0 0 0 
                  0 0 0 0 0 0 0 0 0 0 0 
                   0 0 0 0 0 0 0 0 0 0 0 
-                   0 0 0 0 0 0 0 R 0 0 0 
+                   0 0 0 0 0 0 0 0 0 0 0 
                     0 0 0 0 0 R 0 0 0 0 0 
+                     0 0 0 0 B 0 0 0 0 0 0 
+                      0 0 0 0 R 0 0 0 0 0 0 
+                       0 0 0 0 0 0 0 0 0 0 0 
+                        0 0 0 0 0 0 0 0 0 0 0 
+                         0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        bridgeFinder = BridgeDefender(tiles, Colour.RED)
+        ans = bridgeFinder.task(Colour.RED)
+        self.assertEqual(ans, (6, 5))
+
+    def test5(self):
+        board_str = (
+            """0 0 0 0 0 0 0 0 0 0 0 
+                0 0 0 0 0 0 0 0 0 0 0 
+                 0 0 0 0 0 0 0 0 0 0 0 
+                  0 0 0 0 0 0 0 0 0 0 0 
+                   0 0 0 0 0 0 0 0 0 0 0 
+                    0 0 0 0 B R 0 0 0 0 0 
+                     0 0 0 R 0 0 0 0 0 0 0 
+                      0 0 0 0 0 0 0 0 0 0 0 
+                       0 0 0 0 0 0 0 0 0 0 0 
+                        0 0 0 0 0 0 0 0 0 0 0 
+                         0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        bridgeFinder = BridgeDefender(tiles, Colour.RED)
+        ans = bridgeFinder.task(Colour.RED)
+        self.assertEqual(ans, (6, 4))
+
+    def test6(self):
+        board_str = (
+            """0 0 0 0 0 0 0 0 0 0 0 
+                0 0 0 0 0 0 0 0 0 0 0 
+                 0 0 0 0 0 0 0 0 0 0 0 
+                  0 0 0 0 0 0 0 0 0 0 0 
+                   0 0 0 0 R 0 0 0 0 0 0 
+                    0 0 0 0 B R 0 0 0 0 0 
                      0 0 0 0 0 0 0 0 0 0 0 
                       0 0 0 0 0 0 0 0 0 0 0 
+                       0 0 0 0 0 0 0 0 0 0 0 
+                        0 0 0 0 0 0 0 0 0 0 0 
+                         0 0 0 0 0 0 0 0 0 0 0"""
+        )
+        board = Board.from_string(board_str, board_size=11)
+        self.assertEqual(board.size, 11)
+
+        tiles = [[tile.colour for tile in row] for row in board.tiles]
+        bridgeFinder = BridgeDefender(tiles, Colour.RED)
+        ans = bridgeFinder.task(Colour.RED)
+        self.assertEqual(ans, (4, 5))
+
+    def testNoPierceAttempt(self):
+        board_str = (
+            """0 0 0 0 0 0 0 0 0 0 0 
+                0 0 0 0 0 0 0 0 0 0 0 
+                 0 0 0 0 0 0 0 0 0 0 0 
+                  0 0 0 0 0 0 R 0 0 0 0 
+                   0 0 0 0 R 0 0 R 0 0 0 
+                    0 0 0 0 0 R 0 0 0 0 0 
+                     0 0 0 R 0 0 R 0 0 0 0 
+                      0 0 0 0 R 0 0 0 0 0 0 
                        0 0 0 0 0 0 0 0 0 0 0 
                         0 0 0 0 0 0 0 0 0 0 0 
                          0 0 0 0 0 0 0 0 0 0 0"""
