@@ -145,7 +145,7 @@ class ChainFinder:
                 rotated_y = x
             elif orientation == Orientation.TOP:
                 rotated_x = -x
-                rotated_x = -y
+                rotated_y = -y
                 
             rotated_offsets.append((rotated_x, rotated_y))
         
