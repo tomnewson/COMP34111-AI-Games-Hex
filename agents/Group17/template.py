@@ -194,7 +194,7 @@ class ChainFinder:
             if not self.is_within_bounds((nx, ny)) or self.tiles[nx][ny].colour is not None:
                 return None
             
-        offset_cell = ziggurat_offsets[1]
+        offset_cell = ziggurat_offsets[3]
             
         print(f"Found a ziggurat at: ({cell.x}, {cell.y})")
         return (cell.x + offset_cell[0], cell.y + offset_cell[1])
