@@ -76,23 +76,18 @@ class BridgeDefender:
                                 f"Potential Bridge Found! ({cell.x},{cell.y})({nx},{ny})"
                             )
                             (mx0, my0), (mx1, my1) = midOffsets[(dx, dy)]
-                            midx0 = cell.x + mx0
-                            midy0 = cell.y + my0
-                            midx1 = cell.x + mx1
-                            midy1 = cell.y + my1
+                            midx0, midy0 = cell.x + mx0, cell.y + my0
+                            midx1, midy1 = cell.x + mx1, cell.y + my1
+
+                            tile0 = self.tiles[midx0][midy0]
+                            tile1 = self.tiles[midx1][midy1]
+
                             conditions = [
-                                (
-                                    self.tiles[midx0][midy0].colour == opponentColour
-                                    and self.tiles[midx1][midy1].colour is None,
-                                    (midx1, midy1),
-                                ),
-                                (
-                                    self.tiles[midx0][midy0].colour is None
-                                    and self.tiles[midx1][midy1].colour
-                                    == opponentColour,
-                                    (midx0, midy0),
-                                ),
+                                (tile0.colour == opponentColour and tile1.colour is None, (midx1, midy1)),
+                                (tile0.colour is None and tile1.colour == opponentColour, (midx0, midy0))
                             ]
+
+                            # Check conditions
                             for condition, result in conditions:
                                 if condition:
                                     return result
